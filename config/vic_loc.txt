@@ -1,0 +1,14 @@
+location
+hierarchical
+Spain
+Brazil
+Chile
+Guatemala
+France
+Usa
+Australia
+Thailand
+Norway
+Portugal
+Togo
+Peru

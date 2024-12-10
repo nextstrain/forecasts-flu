@@ -1,0 +1,27 @@
+# These data options are over-ridden when calling run-model.py but are expected by ModelConfig
+data:
+  name: "MLR" # Model version
+  case_path: "data/test/prepared_cases.tsv"
+  seq_path: "results/vic_2024-02/variant_seq_counts_subyr_subloc.tsv"
+  aggregation_frequency: "2W-SUN"
+
+settings:
+  fit: true # Fit the model?
+  save: true # Save model state?
+  load: false # Load old model?
+  export_json: true  # Export model results as json
+  ps: [0.5, 0.8, 0.95] # HPDI intervals to be exported
+
+model:
+  pool_scale: 0.25 # between 0.1 to 0.5
+  generation_time: 3.4 # (Carrat et al. 2008 https://academic.oup.com/aje/article/167/7/775/83777)
+  pivot: "C.5"
+  hierarchical: true # Keep hierarchical for analysis across regions
+  version: "MLR"
+
+inference:
+  method: "NUTS"
+  iters: 50000 # Number of iterations for SVI
+  lr: 4e-4 # Learning rate for the model
+  num_warmup: 200
+  num_samples: 200

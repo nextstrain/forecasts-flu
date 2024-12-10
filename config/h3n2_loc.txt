@@ -1,0 +1,14 @@
+location
+hierarchical
+Australia
+Usa
+France
+Cambodia
+Spain
+Brazil
+Philippines
+Japan
+Netherlands
+Norway
+Thailand
+Chile
