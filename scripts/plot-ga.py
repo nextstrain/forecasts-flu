@@ -81,8 +81,8 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
         ]
 
     points = base_chart.mark_circle(size=35).encode(
-        x=alt.X("median:Q", title="Growth advantage"),
-        y=alt.Y("variant:N", title=f"Variant (pivot {pivot})", sort=locations),
+        x=alt.X("median:Q", title=f"Growth advantage over {pivot}"),
+        y=alt.Y("variant:N", title="Variant", sort=locations),
         color=alt.Color("variant:N", scale=alt.Scale(domain=list(color_by_variant.keys()), range=list(color_by_variant.values()))),
         tooltip=tooltip_attributes
         )
