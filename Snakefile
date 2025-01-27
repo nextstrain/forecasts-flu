@@ -201,7 +201,7 @@ rule get_location_to_plot:
     output:
         locations="results/{build_name}/locations_to_plot.lst",
     params:
-        total_locations=9,
+        total_locations=8,
     shell:
         """
         echo "location" > {output.locations};
