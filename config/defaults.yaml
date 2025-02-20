@@ -12,8 +12,8 @@ data:
 builds:
     h3n2:
         virus: "h3n2"
-        variant: "subclade"
-        coloring_field: "subclade"
+        variant: "proposedSubclade"
+        coloring_field: "proposed_subclade"
         location: "country"
         min_date: "2024-05-01"
         max_date: "4W"
