@@ -212,7 +212,6 @@ rule plot_freq:
     input:
         freq_data="results/{build_name}/mlr/freq.tsv",
         raw_data="results/{build_name}/raw_freq.tsv",
-        cases="results/{build_name}/cases.tsv",
         color_scheme="config/color_schemes.tsv",
         auspice_config="results/{build_name}/auspice_config.json",
         loc_lst="results/{build_name}/locations_to_plot.lst",
@@ -225,7 +224,6 @@ rule plot_freq:
         python3 ./scripts/plot-freq.py \
             --input_freq {input.freq_data} \
             --input_raw {input.raw_data} \
-            --input_cases {input.cases} \
             --colors {input.color_scheme} \
             --location_list {input.loc_lst} \
             --auspice-config {input.auspice_config} \
