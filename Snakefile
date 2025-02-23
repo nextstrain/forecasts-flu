@@ -58,9 +58,21 @@ rule filter_data:
             --output-metadata {output.metadata}
         """
 
+rule update_metadata:
+    input:
+        metadata="results/{build_name}/metadata_with_nextclade.tsv"
+    output:
+        metadata="results/{build_name}/metadata_with_nextclade_updated.tsv"
+    shell:
+        """
+        python scripts/update-metadata.py \
+            --input {input.metadata} \
+            --output {output.metadata}
+        """
+
 rule clade_seq_counts:
     input:
-        metadata="results/{build_name}/metadata_with_nextclade.tsv",
+        metadata="results/{build_name}/metadata_with_nextclade_updated.tsv",
     output:
         counts="results/{build_name}/variant_seq_counts.tsv",
     params:
