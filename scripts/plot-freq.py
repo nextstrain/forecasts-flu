@@ -143,6 +143,15 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
                     labels=[str(int(case_ticks.max()))],
                 )
 
+    # Set logit scale on the y-axis and define ticks
+    # Set these at the end, so they apply to every facet
+    # Choose 0.005 and 0.92 as y-limits to avoid infinite logit transformations
+    fig.set(yscale="logit")
+    fig.set(ylim=(0.005, 0.92))
+    # Tick locations and labels:
+    fig.set(yticks=[0.01, 0.1, 0.5, 0.9])
+    fig.set(yticklabels=["1%", "10%", "50%", "90%"])
+
     fig.figure.subplots_adjust(wspace=0.25)
     sns.despine()
 
