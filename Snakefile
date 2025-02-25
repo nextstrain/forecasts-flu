@@ -58,9 +58,23 @@ rule filter_data:
             --output-metadata {output.metadata}
         """
 
-rule clade_seq_counts:
+rule update_metadata:
     input:
         metadata="results/{build_name}/metadata_with_nextclade.tsv",
+        mapping="config/{build_name}_mapping.tsv",
+    output:
+        metadata="results/{build_name}/metadata_with_nextclade_updated.tsv"
+    shell:
+        """
+        python scripts/update-metadata.py \
+            --input-metadata {input.metadata} \
+            --input-mapping {input.mapping} \
+            --output {output.metadata}
+        """
+
+rule clade_seq_counts:
+    input:
+        metadata="results/{build_name}/metadata_with_nextclade_updated.tsv",
     output:
         counts="results/{build_name}/variant_seq_counts.tsv",
     params:
@@ -212,7 +226,6 @@ rule plot_freq:
     input:
         freq_data="results/{build_name}/mlr/freq.tsv",
         raw_data="results/{build_name}/raw_freq.tsv",
-        cases="results/{build_name}/cases.tsv",
         color_scheme="config/color_schemes.tsv",
         auspice_config="results/{build_name}/auspice_config.json",
         loc_lst="results/{build_name}/locations_to_plot.lst",
@@ -225,7 +238,6 @@ rule plot_freq:
         python3 ./scripts/plot-freq.py \
             --input_freq {input.freq_data} \
             --input_raw {input.raw_data} \
-            --input_cases {input.cases} \
             --colors {input.color_scheme} \
             --location_list {input.loc_lst} \
             --auspice-config {input.auspice_config} \
