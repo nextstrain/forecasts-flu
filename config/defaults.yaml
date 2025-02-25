@@ -15,28 +15,25 @@ builds:
         variant: "proposedSubclade"
         coloring_field: "proposed_subclade"
         location: "country"
-        min_date: "2024-05-01"
-        max_date: "4W"
-        threshold: 30
-        loc_lst: "config/h3n2_loc.txt"
-        var_lst: "config/h3n2_var.txt"
+        min_date: "6M"
+        max_date: "1D"
+        location_min_seq: 150
+        clade_min_seq: 30
     h1n1pdm:
         virus: "h1n1pdm"
         variant: "subclade"
         coloring_field: "subclade"
         location: "country"
-        min_date: "2024-05-01"
-        max_date: "4W"
-        threshold: 30
-        loc_lst: "config/h1n1pdm_loc.txt"
-        var_lst: "config/h1n1pdm_var.txt"
+        min_date: "6M"
+        max_date: "1D"
+        location_min_seq: 150
+        clade_min_seq: 30
     vic:
         virus: "vic"
         variant: "subclade"
         coloring_field: "subclade"
         location: "country"
-        min_date: "2024-05-01"
-        max_date: "4W"
-        threshold: 30
-        loc_lst: "config/vic_loc.txt"
-        var_lst: "config/vic_var.txt"
+        min_date: "6M"
+        max_date: "1D"
+        location_min_seq: 150
+        clade_min_seq: 30
