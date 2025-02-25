@@ -6,6 +6,10 @@ rule all:
         expand("plots/{build_name}/ga/ga_by_location.png", build_name=list(config["builds"].keys())),
         expand("plots/{build_name}/freq/freq_by_location.png", build_name=list(config["builds"].keys())),
 
+rule all_models:
+    input:
+        expand("results/{build_name}/mlr/MLR_results.json", build_name=list(config["builds"].keys())),
+
 rule download_metadata:
     output:
         "data/{virus}/metadata.tsv",
