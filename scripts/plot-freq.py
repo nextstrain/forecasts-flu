@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
 import sys
+import matplotlib.ticker as mticker
 
 # Set global default fontsizes
 mpl.rcParams["legend.title_fontsize"] = 12
@@ -147,10 +148,14 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
     # Set these at the end, so they apply to every facet
     # Choose 0.005 and 0.92 as y-limits to avoid infinite logit transformations
     fig.set(yscale="logit")
-    fig.set(ylim=(0.005, 0.92))
+    fig.set(ylim=(0.018, 0.92))
     # Tick locations and labels:
-    fig.set(yticks=[0.01, 0.1, 0.5, 0.9])
-    fig.set(yticklabels=["1%", "10%", "50%", "90%"])
+    fig.set(yticks=[0.02, 0.1, 0.2, 0.5, 0.9])
+    fig.set(yticklabels=["2%", "10%", "20%", "50%", "90%"])
+
+    # Disable minor ticks entirely
+    for ax in fig.axes:
+        ax.yaxis.set_minor_locator(mticker.NullLocator())
 
     fig.figure.subplots_adjust(wspace=0.25)
     sns.despine()
