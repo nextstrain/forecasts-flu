@@ -1,53 +1,92 @@
 #!/usr/bin/env python3
 # from ChatGPT
-# This should be cleaned up to have a structured list of AA substitutions
-# mapped to a list of variant names
 import argparse
 import csv
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Update the 'proposedSubclade' column based on specific AA substitutions."
+        description="Update the 'proposedSubclade' column based on mapping rules defined in a TSV."
     )
-    parser.add_argument("--input", required=True, help="Input metadata TSV file.")
-    parser.add_argument("--output", required=True, help="Output updated metadata TSV file.")
+    parser.add_argument(
+        "--input-metadata",
+        required=True,
+        help="Input metadata TSV file containing 'proposedSubclade' and 'aaSubstitutions' columns."
+    )
+    parser.add_argument(
+        "--input-mapping",
+        required=True,
+        help="Mapping TSV file with columns: old_label, new_label, and optional comma-separated mutations."
+    )
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="Output updated metadata TSV file."
+    )
     args = parser.parse_args()
 
-    # Define patterns for relabeling
-    # Condition 1: If 'HA1:N158K' and 'HA1:K189R' are present.
-    # Also include 'HA1:N122D' and 'HA1:K276E' to demarcate J.2
-    condition1 = {"HA1:N158K", "HA1:K189R", "HA1:N122D", "HA1:K276E"}
-    new_label1 = "J.2:158K-189R"
+    # 1. Read the mapping from the TSV file
+    #    Each line: old_label, new_label, required_substitutions (optional)
+    mapping = []
+    with open(args.input_mapping, "r", encoding="utf-8") as mapping_file:
+        for line in mapping_file:
+            line = line.strip()
+            if not line:
+                # Skip empty lines
+                continue
+            parts = line.split("\t")
 
-    # Condition 2: If 'HA1:T135A' and 'HA1:S145N' are present.
-    # Also include 'HA1:N122D' and 'HA1:K276E' to demarcate J.2
-    condition2 = {"HA1:T135A", "HA1:S145N", "HA1:N122D", "HA1:K276E"}
-    new_label2 = "J.2:135A-145N"
+            # Expect at least old_label, new_label
+            if len(parts) < 2:
+                raise ValueError(
+                    f"Each line in mapping file must have at least 2 columns. Found: {line}"
+                )
 
-    with open(args.input, "r", newline="", encoding="utf-8") as infile, \
+            old_label = parts[0].strip()  # e.g. "J.2"
+            new_label = parts[1].strip()  # e.g. "J.2:158K-189R"
+
+            if len(parts) > 2 and parts[2].strip():
+                # If there is a third column and it's not empty
+                required_subs = {
+                    s.strip() for s in parts[2].split(",") if s.strip()
+                }
+            else:
+                # No required substitutions (unconditional update)
+                required_subs = set()
+
+            mapping.append((old_label, new_label, required_subs))
+
+    # 2. Process the metadata TSV
+    with open(args.input_metadata, "r", newline="", encoding="utf-8") as infile, \
          open(args.output, "w", newline="", encoding="utf-8") as outfile:
 
         reader = csv.DictReader(infile, delimiter="\t")
         fieldnames = reader.fieldnames
 
-        # If for some reason these columns are not in the file, you may want to handle that gracefully.
+        # Ensure required columns exist
         if 'proposedSubclade' not in fieldnames or 'aaSubstitutions' not in fieldnames:
-            raise ValueError("Input TSV must contain 'proposedSubclade' and 'aaSubstitutions' columns.")
+            raise ValueError(
+                "Input metadata TSV must contain 'proposedSubclade' and 'aaSubstitutions' columns."
+            )
 
         writer = csv.DictWriter(outfile, fieldnames=fieldnames, delimiter="\t")
         writer.writeheader()
 
         for row in reader:
+            current_label = row['proposedSubclade']
             aa_subs = row['aaSubstitutions'].split(",")
-            aa_subs_set = set([sub.strip() for sub in aa_subs])
+            aa_subs_set = {sub.strip() for sub in aa_subs if sub.strip()}
 
-            # Check the two conditions in sequence:
-            if condition1.issubset(aa_subs_set):
-                # If Condition 1 is satisfied
-                row['proposedSubclade'] = new_label1
-            elif condition2.issubset(aa_subs_set):
-                # Else if Condition 2 is satisfied
-                row['proposedSubclade'] = new_label2
+            # Check the mapping in the order they appear
+            for old_label, new_label, required_subs in mapping:
+                if current_label == old_label:
+                    # If no required subs, update unconditionally
+                    if not required_subs:
+                        row['proposedSubclade'] = new_label
+                        break
+                    # If required_subs is a subset of aa_subs_set
+                    if required_subs.issubset(aa_subs_set):
+                        row['proposedSubclade'] = new_label
+                        break
 
             writer.writerow(row)
 

@@ -60,13 +60,15 @@ rule filter_data:
 
 rule update_metadata:
     input:
-        metadata="results/{build_name}/metadata_with_nextclade.tsv"
+        metadata="results/{build_name}/metadata_with_nextclade.tsv",
+        mapping="config/{build_name}_mapping.tsv",
     output:
         metadata="results/{build_name}/metadata_with_nextclade_updated.tsv"
     shell:
         """
         python scripts/update-metadata.py \
-            --input {input.metadata} \
+            --input-metadata {input.metadata} \
+            --input-mapping {input.mapping} \
             --output {output.metadata}
         """
 
