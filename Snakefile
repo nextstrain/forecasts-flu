@@ -64,11 +64,14 @@ rule update_metadata:
         mapping="config/{build_name}_mapping.tsv",
     output:
         metadata="results/{build_name}/metadata_with_nextclade_updated.tsv"
+    params:
+        variant_column=lambda wildcards: config["builds"][wildcards.build_name]["variant"]
     shell:
         """
         python scripts/update-metadata.py \
             --input-metadata {input.metadata} \
             --input-mapping {input.mapping} \
+            --variant-column {params.variant_column} \
             --output {output.metadata}
         """
 
