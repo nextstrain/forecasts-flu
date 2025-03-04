@@ -22,6 +22,16 @@ Edit the MLR model config per lineage `config/mlr-model/<lineage>.yaml` to defin
 
 ## Run the workflow
 
+By default, the workflow will run MLR models for all builds defined in `config/defaults.yaml` and plot the inferred frequencies and growth advantages.
+
 ```
 nextstrain build --docker --image=ghcr.io/blab/flu-geo-fitness:latest .
+```
+
+Alternately, you can run the workflow through the creation of MLR model JSONs and upload these JSONs to S3 by specifying an additional configuration file.
+Since we only need the custom Docker image for plotting model outputs, we can use the Nextstrain base image in the following command.
+
+```
+nextstrain build --docker . \
+    --configfile config/defaults.yaml config/optional.yaml
 ```
