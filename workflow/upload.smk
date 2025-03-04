@@ -10,9 +10,9 @@ def _get_s3_url(w, input_file):
 
 rule copy_latest_model_results_to_dated:
     input:
-        latest_model_results = "results/{build_name}/mlr/MLR_results.json",
+        latest_model_results = "results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
     output:
-        dated_model_results = "results/{build_name}/mlr/{date}_MLR_results.json",
+        dated_model_results = "results/{lineage}/{geo_resolution}/mlr/{date}_MLR_results.json",
     shell:
         """
         cp {input.latest_model_results} {output.dated_model_results}
@@ -20,9 +20,9 @@ rule copy_latest_model_results_to_dated:
 
 rule upload_dated_model_results_to_s3:
     input:
-        model_results = "results/{build_name}/mlr/{date}_MLR_results.json"
+        model_results = "results/{lineage}/{geo_resolution}/mlr/{date}_MLR_results.json"
     output:
-        touch("results/{build_name}/{date}_results_s3_upload.done")
+        touch("results/{lineage}/{geo_resolution}/{date}_results_s3_upload.done")
     params:
         s3_url=lambda w, input: _get_s3_url(w, input.model_results),
     shell:
@@ -35,9 +35,9 @@ rule upload_dated_model_results_to_s3:
 
 rule upload_latest_model_results_to_s3:
     input:
-        model_results = "results/{build_name}/mlr/MLR_results.json"
+        model_results = "results/{lineage}/{geo_resolution}/mlr/MLR_results.json"
     output:
-        touch("results/{build_name}/results_s3_upload.done")
+        touch("results/{lineage}/{geo_resolution}/mlr/results_s3_upload.done")
     params:
         s3_url=lambda w, input: _get_s3_url(w, input.model_results),
     shell:

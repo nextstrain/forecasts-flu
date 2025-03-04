@@ -1,39 +1,34 @@
 data:
-    h3n2:
-        s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/metadata.tsv.xz"
-        s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/ha/nextclade.tsv.xz"
-    h1n1pdm:
-        s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/metadata.tsv.xz"
-        s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/ha/nextclade.tsv.xz"
-    vic:
-        s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/metadata.tsv.xz"
-        s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/ha/nextclade.tsv.xz"
+  h3n2:
+    s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/metadata.tsv.xz"
+    s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/ha/nextclade.tsv.xz"
+  h1n1pdm:
+    s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/metadata.tsv.xz"
+    s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/ha/nextclade.tsv.xz"
+  vic:
+    s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/metadata.tsv.xz"
+    s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/ha/nextclade.tsv.xz"
 
-builds:
-    h3n2:
-        virus: "h3n2"
-        variant: "proposedSubclade"
-        coloring_field: "proposed_subclade"
-        location: "country"
-        min_date: "6M"
-        max_date: "1D"
-        location_min_seq: 150
-        clade_min_seq: 30
-    h1n1pdm:
-        virus: "h1n1pdm"
-        variant: "subclade"
-        coloring_field: "subclade"
-        location: "country"
-        min_date: "6M"
-        max_date: "1D"
-        location_min_seq: 150
-        clade_min_seq: 30
-    vic:
-        virus: "vic"
-        variant: "subclade"
-        coloring_field: "subclade"
-        location: "country"
-        min_date: "6M"
-        max_date: "1D"
-        location_min_seq: 150
-        clade_min_seq: 30
+lineages:
+  - h1n1pdm
+  - h3n2
+  - vic
+
+geo_resolutions:
+  - country
+  - region
+
+prepare_data:
+  country:
+    min_date: "6M"
+    max_date: "1D"
+    location_min_seq: 150
+    clade_min_seq: 30
+  region:
+    min_date: "6M"
+    max_date: "1D"
+    location_min_seq: 150
+    clade_min_seq: 30
+
+variant: "proposedSubclade"
+coloring_field: "proposed_subclade"
