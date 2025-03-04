@@ -1,10 +1,26 @@
 configfile: "config/defaults.yaml"
 
-rule all:
-    input:
-        expand("plots/{build_name}/ga/ga_by_variant.png", build_name=list(config["builds"].keys())),
-        expand("plots/{build_name}/ga/ga_by_location.png", build_name=list(config["builds"].keys())),
-        expand("plots/{build_name}/freq/freq_by_location.png", build_name=list(config["builds"].keys())),
+wildcard_constraints:
+    date = r"\d{4}-\d{2}-\d{2}"
+
+def get_todays_date():
+    from datetime import datetime
+    date = datetime.today().strftime('%Y-%m-%d')
+    return date
+
+run_date = config.get("run_date", get_todays_date())
+
+if config.get("s3_dst"):
+    rule upload_all_models:
+        input:
+            expand("results/{build_name}/{date}_results_s3_upload.done", build_name=list(config["builds"].keys()), date=run_date),
+            expand("results/{build_name}/results_s3_upload.done", build_name=list(config["builds"].keys()))
+else:
+    rule all:
+        input:
+            expand("plots/{build_name}/ga/ga_by_variant.png", build_name=list(config["builds"].keys())),
+            expand("plots/{build_name}/ga/ga_by_location.png", build_name=list(config["builds"].keys())),
+            expand("plots/{build_name}/freq/freq_by_location.png", build_name=list(config["builds"].keys())),
 
 rule all_models:
     input:
@@ -254,3 +270,6 @@ rule plot_ga:
             --auspice-config {input.auspice_config} \
             --coloring-field {params.coloring_field}
         """
+
+if config.get("s3_dst"):
+    include: "workflow/upload.smk"
