@@ -68,11 +68,14 @@ rule update_metadata:
         mapping="config/{build_name}_mapping.tsv",
     output:
         metadata="results/{build_name}/metadata_with_nextclade_updated.tsv"
+    params:
+        variant_column=lambda wildcards: config["builds"][wildcards.build_name]["variant"]
     shell:
         """
         python scripts/update-metadata.py \
             --input-metadata {input.metadata} \
             --input-mapping {input.mapping} \
+            --variant-column {params.variant_column} \
             --output {output.metadata}
         """
 
@@ -80,7 +83,7 @@ rule clade_seq_counts:
     input:
         metadata="results/{build_name}/metadata_with_nextclade_updated.tsv",
     output:
-        counts="results/{build_name}/variant_seq_counts.tsv",
+        sequence_counts="results/{build_name}/seq_counts.tsv",
     params:
         id_column="strain",
         date_column="date",
@@ -94,39 +97,32 @@ rule clade_seq_counts:
             --date-column {params.date_column:q} \
             --location-column {params.location_column:q} \
             --clade-column {params.variant_column:q} \
-            --output /dev/stdout \
-            | csvtk rename -t -f clade -n variant > {output.counts}
+            --output {output.sequence_counts}
             """
 
-rule get_location:
+rule prepare_clade_data:
+    """Preparing clade counts for analysis"""
     input:
-        counts="results/{build_name}/variant_seq_counts.tsv",
+        sequence_counts = "results/{build_name}/seq_counts.tsv"
     output:
-        locations="results/{build_name}/location.lst",
+        sequence_counts = "results/{build_name}/prepared_seq_counts.tsv"
     params:
-        threshold=lambda wildcards: config["builds"][wildcards.build_name]["threshold"],
+        min_date=lambda wildcards: config["builds"][wildcards.build_name]["min_date"],
+        location_min_seq=lambda wildcards: config["builds"][wildcards.build_name]["location_min_seq"],
+        clade_min_seq=lambda wildcards: config["builds"][wildcards.build_name]["clade_min_seq"],
     shell:
         """
-        python3 scripts/get_location.py \
-            --input_seqs {input.counts} \
-            --threshold {params.threshold} \
-            --output {output.locations}
-        """
-
-rule filter_location:
-    input:
-        counts="results/{build_name}/variant_seq_counts.tsv",
-        location="results/{build_name}/location.lst",
-    output:
-        counts="results/{build_name}/variant_seq_counts_subloc.tsv",
-    shell:
-        """
-        tsv-join -H -k location -f {input.location} {input.counts} > {output.counts}
+        python ./scripts/prepare-data.py \
+            --seq-counts {input.sequence_counts} \
+            --min-date {params.min_date} \
+            --location-min-seq {params.location_min_seq} \
+            --clade-min-seq {params.clade_min_seq} \
+            --output-seq-counts {output.sequence_counts}
         """
 
 rule mlr_model:
     input:
-        counts="results/{build_name}/variant_seq_counts_subloc.tsv",
+        counts="results/{build_name}/prepared_seq_counts.tsv",
         config="config/mlr/{build_name}.yaml",
     output:
         model="results/{build_name}/mlr/MLR_results.json",
@@ -213,26 +209,12 @@ rule prepare_cases:
             --output {output.cases}
         """
 
-rule get_location_to_plot:
-    input:
-        locations="results/{build_name}/location.lst",
-    output:
-        locations="results/{build_name}/locations_to_plot.lst",
-    params:
-        total_locations=8,
-    shell:
-        """
-        echo "location" > {output.locations};
-        sed 1d {input.locations} | head -n {params.total_locations} >> {output.locations}
-        """
-
 rule plot_freq:
     input:
         freq_data="results/{build_name}/mlr/freq.tsv",
         raw_data="results/{build_name}/raw_freq.tsv",
         color_scheme="config/color_schemes.tsv",
-        auspice_config="results/{build_name}/auspice_config.json",
-        loc_lst="results/{build_name}/locations_to_plot.lst",
+        auspice_config="results/{build_name}/auspice_config.json"
     output:
         variant="plots/{build_name}/freq/freq_by_location.png"
     params:
@@ -243,7 +225,6 @@ rule plot_freq:
             --input_freq {input.freq_data} \
             --input_raw {input.raw_data} \
             --colors {input.color_scheme} \
-            --location_list {input.loc_lst} \
             --auspice-config {input.auspice_config} \
             --coloring-field {params.coloring_field} \
             --output {output.variant}
@@ -254,9 +235,7 @@ rule plot_ga:
         ga="results/{build_name}/mlr/ga.tsv",
         color_scheme="config/color_schemes.tsv",
         pivot="results/{build_name}/pivot.txt",
-        auspice_config="results/{build_name}/auspice_config.json",
-        loc_lst="results/{build_name}/locations_to_plot.lst",
-        var_lst=lambda wildcards: config["builds"][wildcards.build_name]["var_lst"],
+        auspice_config="results/{build_name}/auspice_config.json"
     output:
         variant="plots/{build_name}/ga/ga_by_variant.png",
         location="plots/{build_name}/ga/ga_by_location.png",
@@ -271,8 +250,6 @@ rule plot_ga:
             --colors {input.color_scheme} \
             --out_variant {output.variant} \
             --out_location {output.location} \
-            --location_list {input.loc_lst} \
-            --variant_list {input.var_lst} \
             --pivot {input.pivot} \
             --auspice-config {input.auspice_config} \
             --coloring-field {params.coloring_field}

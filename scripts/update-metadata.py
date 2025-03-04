@@ -5,7 +5,7 @@ import csv
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Update the 'proposedSubclade' column based on mapping rules defined in a TSV."
+        description="Update the variant column based on mapping rules defined in a TSV."
     )
     parser.add_argument(
         "--input-metadata",
@@ -17,6 +17,10 @@ def main():
         required=True,
         help="Mapping TSV file with columns: old_label, new_label, and optional comma-separated mutations."
     )
+    parser.add_argument(
+        "--variant-column",
+        required=True,
+        help="Column in metadata TSV with variant information to update")
     parser.add_argument(
         "--output",
         required=True,
@@ -63,16 +67,16 @@ def main():
         fieldnames = reader.fieldnames
 
         # Ensure required columns exist
-        if 'proposedSubclade' not in fieldnames or 'aaSubstitutions' not in fieldnames:
+        if args.variant_column not in fieldnames or 'aaSubstitutions' not in fieldnames:
             raise ValueError(
-                "Input metadata TSV must contain 'proposedSubclade' and 'aaSubstitutions' columns."
+                "Input metadata TSV must contain args.variant_column and 'aaSubstitutions' columns."
             )
 
         writer = csv.DictWriter(outfile, fieldnames=fieldnames, delimiter="\t")
         writer.writeheader()
 
         for row in reader:
-            current_label = row['proposedSubclade']
+            current_label = row[args.variant_column]
             aa_subs = row['aaSubstitutions'].split(",")
             aa_subs_set = {sub.strip() for sub in aa_subs if sub.strip()}
 
@@ -81,11 +85,11 @@ def main():
                 if current_label == old_label:
                     # If no required subs, update unconditionally
                     if not required_subs:
-                        row['proposedSubclade'] = new_label
+                        row[args.variant_column] = new_label
                         break
                     # If required_subs is a subset of aa_subs_set
                     if required_subs.issubset(aa_subs_set):
-                        row['proposedSubclade'] = new_label
+                        row[args.variant_column] = new_label
                         break
 
             writer.writerow(row)
