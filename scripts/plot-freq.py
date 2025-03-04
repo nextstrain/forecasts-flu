@@ -150,8 +150,8 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
     fig.set(yscale="logit")
     fig.set(ylim=(0.018, 0.92))
     # Tick locations and labels:
-    fig.set(yticks=[0.02, 0.1, 0.2, 0.5, 0.9])
-    fig.set(yticklabels=["2%", "10%", "20%", "50%", "90%"])
+    fig.set(yticks=[0.02, 0.1, 0.2, 0.5, 0.8, 0.9])
+    fig.set(yticklabels=["2%", "10%", "20%", "50%", "80%", "90%"])
 
     # Disable minor ticks entirely
     for ax in fig.axes:
