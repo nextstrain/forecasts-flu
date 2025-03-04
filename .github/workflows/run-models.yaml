@@ -1,0 +1,30 @@
+name: Run models
+
+on:
+  repository_dispatch:
+    types:
+      - run-models
+
+jobs:
+  run_models:
+    permissions:
+      id-token: write
+    uses: nextstrain/.github/.github/workflows/pathogen-repo-build.yaml@master
+    secrets: inherit
+    with:
+      runtime: aws-batch
+      run: |
+        nextstrain build \
+          --aws-batch \
+          --detach \
+          --no-download \
+          --image nextstrain/base \
+          --cpus 8 \
+          --memory 16GiB \
+          --env AWS_DEFAULT_REGION \
+          --env GITHUB_RUN_ID \
+          . \
+            --configfile config/defaults.yaml config/optional.yaml \
+            --keep-going
+      env: |
+        GITHUB_RUN_ID: ${{ github.run_id }}
