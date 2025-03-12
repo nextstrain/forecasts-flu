@@ -13,24 +13,24 @@ run_date = config.get("run_date", get_todays_date())
 if config.get("s3_dst"):
     rule upload_all_models:
         input:
-            expand("results/{build_name}/{date}_results_s3_upload.done", build_name=list(config["builds"].keys()), date=run_date),
-            expand("results/{build_name}/results_s3_upload.done", build_name=list(config["builds"].keys()))
+            expand("results/{lineage}/{geo_resolution}/mlr/{date}_results_s3_upload.done", lineage=config["lineages"], geo_resolution=config["geo_resolutions"], date=run_date),
+            expand("results/{lineage}/{geo_resolution}/mlr/results_s3_upload.done", lineage=config["lineages"], geo_resolution=config["geo_resolutions"])
 else:
     rule all:
         input:
-            expand("plots/{build_name}/ga/ga_by_variant.png", build_name=list(config["builds"].keys())),
-            expand("plots/{build_name}/ga/ga_by_location.png", build_name=list(config["builds"].keys())),
-            expand("plots/{build_name}/freq/freq_by_location.png", build_name=list(config["builds"].keys())),
+            expand("plots/{lineage}/{geo_resolution}/ga/ga_by_variant.png", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
+            expand("plots/{lineage}/{geo_resolution}/ga/ga_by_location.png", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
+            expand("plots/{lineage}/{geo_resolution}/freq/freq_by_location.png", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
 
 rule all_models:
     input:
-        expand("results/{build_name}/mlr/MLR_results.json", build_name=list(config["builds"].keys())),
+        expand("results/{lineage}/{geo_resolution}/mlr/MLR_results.json", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
 
 rule download_metadata:
     output:
-        "data/{virus}/metadata.tsv",
+        "data/{lineage}/metadata.tsv",
     params:
-        s3_path=lambda wildcards: config["data"][wildcards.virus]["s3_metadata"]
+        s3_path=lambda wildcards: config["data"][wildcards.lineage]["s3_metadata"]
     shell:
         """
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
@@ -38,9 +38,9 @@ rule download_metadata:
 
 rule download_nextclade:
     output:
-        "data/{virus}/nextclade.tsv",
+        "data/{lineage}/nextclade.tsv",
     params:
-        s3_path=lambda wildcards: config["data"][wildcards.virus]["s3_nextclade"]
+        s3_path=lambda wildcards: config["data"][wildcards.lineage]["s3_nextclade"]
     shell:
         """
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
@@ -48,10 +48,10 @@ rule download_nextclade:
 
 rule metadata_with_nextclade:
     input:
-        metadata="data/{virus}/metadata.tsv",
-        nextclade="data/{virus}/nextclade.tsv",
+        metadata="data/{lineage}/metadata.tsv",
+        nextclade="data/{lineage}/nextclade.tsv",
     output:
-        metadata="data/{virus}/metadata_with_nextclade.tsv",
+        metadata="data/{lineage}/metadata_with_nextclade.tsv",
     shell:
         """
         augur merge \
@@ -62,12 +62,12 @@ rule metadata_with_nextclade:
 
 rule filter_data:
     input:
-        metadata=lambda wildcards: f"data/{config['builds'][wildcards.build_name]['virus']}/metadata_with_nextclade.tsv",
+        metadata="data/{lineage}/metadata_with_nextclade.tsv",
     output:
-        metadata="results/{build_name}/metadata_with_nextclade.tsv",
+        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade.tsv",
     params:
-        min_date=lambda wildcards: config["builds"][wildcards.build_name]["min_date"],
-        max_date=lambda wildcards: config["builds"][wildcards.build_name]["max_date"],
+        min_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["min_date"],
+        max_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["max_date"],
     shell:
         """
         augur filter \
@@ -80,12 +80,12 @@ rule filter_data:
 
 rule update_metadata:
     input:
-        metadata="results/{build_name}/metadata_with_nextclade.tsv",
-        mapping="config/{build_name}_mapping.tsv",
+        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade.tsv",
+        mapping="config/{lineage}_mapping.tsv",
     output:
-        metadata="results/{build_name}/metadata_with_nextclade_updated.tsv"
+        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade_updated.tsv"
     params:
-        variant_column=lambda wildcards: config["builds"][wildcards.build_name]["variant"]
+        variant_column=config["variant"],
     shell:
         """
         python scripts/update-metadata.py \
@@ -97,21 +97,20 @@ rule update_metadata:
 
 rule clade_seq_counts:
     input:
-        metadata="results/{build_name}/metadata_with_nextclade_updated.tsv",
+        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade_updated.tsv",
     output:
-        sequence_counts="results/{build_name}/seq_counts.tsv",
+        sequence_counts="results/{lineage}/{geo_resolution}/seq_counts.tsv",
     params:
         id_column="strain",
         date_column="date",
-        variant_column=lambda wildcards: config["builds"][wildcards.build_name]["variant"],
-        location_column=lambda wildcards: config["builds"][wildcards.build_name]["location"],
+        variant_column=config["variant"],
     shell:
         """
         ./scripts/summarize-clade-sequence-counts \
             --metadata {input.metadata} \
             --id-column {params.id_column:q} \
             --date-column {params.date_column:q} \
-            --location-column {params.location_column:q} \
+            --location-column {wildcards.geo_resolution:q} \
             --clade-column {params.variant_column:q} \
             --output {output.sequence_counts}
             """
@@ -119,13 +118,13 @@ rule clade_seq_counts:
 rule prepare_clade_data:
     """Preparing clade counts for analysis"""
     input:
-        sequence_counts = "results/{build_name}/seq_counts.tsv"
+        sequence_counts = "results/{lineage}/{geo_resolution}/seq_counts.tsv"
     output:
-        sequence_counts = "results/{build_name}/prepared_seq_counts.tsv"
+        sequence_counts = "results/{lineage}/{geo_resolution}/prepared_seq_counts.tsv"
     params:
-        min_date=lambda wildcards: config["builds"][wildcards.build_name]["min_date"],
-        location_min_seq=lambda wildcards: config["builds"][wildcards.build_name]["location_min_seq"],
-        clade_min_seq=lambda wildcards: config["builds"][wildcards.build_name]["clade_min_seq"],
+        min_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["min_date"],
+        location_min_seq=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["location_min_seq"],
+        clade_min_seq=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["clade_min_seq"],
     shell:
         """
         python ./scripts/prepare-data.py \
@@ -138,15 +137,17 @@ rule prepare_clade_data:
 
 rule mlr_model:
     input:
-        counts="results/{build_name}/prepared_seq_counts.tsv",
-        config="config/mlr/{build_name}.yaml",
+        counts="results/{lineage}/{geo_resolution}/prepared_seq_counts.tsv",
+        config="config/mlr/{lineage}.yaml",
     output:
-        model="results/{build_name}/mlr/MLR_results.json",
+        model="results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
     params:
         run="MLR",
-        path="results/{build_name}/mlr/",
+        path="results/{lineage}/{geo_resolution}/mlr/",
     benchmark:
-        "results/{build_name}/mlr/mlr-model_benchmark.tsv"
+        "results/{lineage}/{geo_resolution}/mlr/mlr-model_benchmark.tsv"
+    resources:
+        mem_mb=3000,
     shell:
         """
         python -u ./scripts/run-model.py \
@@ -158,11 +159,11 @@ rule mlr_model:
 
 rule parse_mlr_json:
     input:
-        model="results/{build_name}/mlr/MLR_results.json",
+        model="results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
     output:
-        ga="results/{build_name}/mlr/ga.tsv",
-        freq="results/{build_name}/mlr/freq.tsv",
-        emp="results/{build_name}/raw_freq.tsv",
+        ga="results/{lineage}/{geo_resolution}/mlr/ga.tsv",
+        freq="results/{lineage}/{geo_resolution}/mlr/freq.tsv",
+        emp="results/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
     params:
         version="MLR",
     shell:
@@ -177,9 +178,9 @@ rule parse_mlr_json:
 
 rule get_pivot:
     input:
-        config="config/mlr/{build_name}.yaml"
+        config="config/mlr/{lineage}.yaml"
     output:
-        "results/{build_name}/pivot.txt"
+        "results/{lineage}/{geo_resolution}/pivot.txt"
     shell:
         """
         python3 scripts/get_pivot.py \
@@ -189,52 +190,25 @@ rule get_pivot:
 
 rule download_auspice_config_json:
     output:
-        config="results/{build_name}/auspice_config.json",
-    params:
-        lineage=lambda wildcards: config["builds"][wildcards.build_name]["virus"],
+        config="results/{lineage}/auspice_config.json",
     shell:
         """
         curl \
             -o {output.config} \
             -L \
-            'https://raw.githubusercontent.com/nextstrain/seasonal-flu/master/profiles/nextflu-private/{params.lineage}/ha/auspice_config.json'
-        """
-
-rule download_cases:
-    output:
-        cases="results/cases.csv",
-    shell:
-        """
-        curl -o {output.cases} -L 'https://xmart-api-public.who.int/FLUMART/VIW_FNT?$format=csv'
-        """
-
-rule prepare_cases:
-    input:
-        cases="results/cases.csv",
-        country_mapping="config/flunet_to_nextstrain_country.tsv",
-    output:
-        cases="results/{build_name}/cases.tsv",
-    params:
-        lineage=lambda wildcards: config["builds"][wildcards.build_name]["virus"],
-    shell:
-        """
-        python3 scripts/prepare_case_counts.py \
-            --cases {input.cases} \
-            --country-mapping {input.country_mapping} \
-            --lineage {params.lineage:q} \
-            --output {output.cases}
+            'https://raw.githubusercontent.com/nextstrain/seasonal-flu/master/profiles/nextflu-private/{wildcards.lineage}/ha/auspice_config.json'
         """
 
 rule plot_freq:
     input:
-        freq_data="results/{build_name}/mlr/freq.tsv",
-        raw_data="results/{build_name}/raw_freq.tsv",
+        freq_data="results/{lineage}/{geo_resolution}/mlr/freq.tsv",
+        raw_data="results/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
         color_scheme="config/color_schemes.tsv",
-        auspice_config="results/{build_name}/auspice_config.json"
+        auspice_config="results/{lineage}/auspice_config.json"
     output:
-        variant="plots/{build_name}/freq/freq_by_location.png"
+        variant="plots/{lineage}/{geo_resolution}/freq/freq_by_location.png"
     params:
-        coloring_field=lambda wildcards: config["builds"][wildcards.build_name]["coloring_field"],
+        coloring_field=config["coloring_field"],
     shell:
         """
         python3 ./scripts/plot-freq.py \
@@ -248,21 +222,20 @@ rule plot_freq:
 
 rule plot_ga:
     input:
-        ga="results/{build_name}/mlr/ga.tsv",
+        ga="results/{lineage}/{geo_resolution}/mlr/ga.tsv",
         color_scheme="config/color_schemes.tsv",
-        pivot="results/{build_name}/pivot.txt",
-        auspice_config="results/{build_name}/auspice_config.json"
+        pivot="results/{lineage}/{geo_resolution}/pivot.txt",
+        auspice_config="results/{lineage}/auspice_config.json"
     output:
-        variant="plots/{build_name}/ga/ga_by_variant.png",
-        location="plots/{build_name}/ga/ga_by_location.png",
+        variant="plots/{lineage}/{geo_resolution}/ga/ga_by_variant.png",
+        location="plots/{lineage}/{geo_resolution}/ga/ga_by_location.png",
     params:
-        virus=lambda wildcards: config["builds"][wildcards.build_name]["virus"],
-        coloring_field=lambda wildcards: config["builds"][wildcards.build_name]["coloring_field"],
+        coloring_field=config["coloring_field"],
     shell:
         """
         python3 ./scripts/plot-ga.py \
             --input_ga {input.ga} \
-            --virus {params.virus} \
+            --virus {wildcards.lineage} \
             --colors {input.color_scheme} \
             --out_variant {output.variant} \
             --out_location {output.location} \
