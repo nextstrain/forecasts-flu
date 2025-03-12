@@ -22,7 +22,7 @@ rule upload_dated_model_results_to_s3:
     input:
         model_results = "results/{lineage}/{geo_resolution}/mlr/{date}_MLR_results.json"
     output:
-        touch("results/{lineage}/{geo_resolution}/{date}_results_s3_upload.done")
+        touch("results/{lineage}/{geo_resolution}/mlr/{date}_results_s3_upload.done")
     params:
         s3_url=lambda w, input: _get_s3_url(w, input.model_results),
     shell:
