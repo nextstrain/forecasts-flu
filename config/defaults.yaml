@@ -21,12 +21,12 @@ geo_resolutions:
 prepare_data:
   country:
     min_date: "6M"
-    max_date: "1D"
+    max_date: "14D"
     location_min_seq: 150
     clade_min_seq: 30
   region:
     min_date: "6M"
-    max_date: "1D"
+    max_date: "14D"
     location_min_seq: 150
     clade_min_seq: 30
 
