@@ -20,6 +20,12 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
     df = pd.read_csv(df_file, sep="\t", parse_dates=["date"])
     raw = pd.read_csv(raw_file, sep="\t", parse_dates=["date"])
 
+    # Add pseudo-count to zero-valued HDPIs to enable proper plotting on the
+    # logit scale.
+    pc = 0.0001
+    for column in ("median", "HDI_95_lower", "HDI_95_upper"):
+        df[column] = df[column].apply(lambda value: value if value > 0 else pc)
+
     # If a location/variant list is specified, subset the GA.
     if loc_lst:
         loc_filter = pd.read_csv(loc_lst)["location"].values
