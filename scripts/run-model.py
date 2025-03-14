@@ -100,6 +100,10 @@ class ModelConfig:
         # Processing generation time
         tau = parse_generation_time(model_cf)
         hier = parse_with_default(model_cf, "hierarchical", dflt=False)
+        left_buffer = parse_with_default(model_cf, "left_buffer", dflt=0)
+        right_buffer = parse_with_default(model_cf, "right_buffer", dflt=0)
+        windowed = parse_with_default(model_cf, "windowed", dflt=False)
+        simple_exclusion = parse_with_default(model_cf, "simple_exclusion", dflt=False)
         if override_hier is not None:
             hier = override_hier
 
@@ -119,7 +123,14 @@ class ModelConfig:
                 print("Hierarchical pool scale:", ps)
                 left_buffer = parse_with_default(model_cf, "left_buffer", dflt=0)
                 right_buffer = parse_with_default(model_cf, "right_buffer", dflt=0)
-                model = hier_mlr.HierMLR(tau=tau, pool_scale=ps, left_buffer=left_buffer, right_buffer=right_buffer)
+                model = hier_mlr.HierMLR(
+                    tau=tau,
+                    pool_scale=ps,
+                    left_buffer=left_buffer,
+                    right_buffer=right_buffer,
+                    windowed=windowed,
+                    simple_exclusion=simple_exclusion,
+                )
             elif version == "Latent":
                 print("Running hier Latent model")
                 order = parse_with_default(model_cf, "order", dflt=6)
@@ -249,6 +260,9 @@ def make_raw_freq_tidy(data, location):
     # Calculate daily raw frequencies
     daily_raw_freq = data.seq_counts / data.seq_counts.sum(axis=1)[:, None]
 
+    # agg_counts
+    agg_counts = data.seq_counts
+
     # Calculate the 7-day moving sum for each of the clades
     kernel = np.ones(7)  # 7-day window
     numerator = np.apply_along_axis(lambda x: np.convolve(x, kernel, mode='same'), axis=0, arr=data.seq_counts)
@@ -264,7 +278,7 @@ def make_raw_freq_tidy(data, location):
     metadata = {
         "dates": data.dates,
         "variants": data.var_names,
-        "sites": ["daily_raw_freq", "weekly_raw_freq"],
+        "sites": ["daily_raw_freq", "weekly_raw_freq", "agg_counts"],
         "location": [location]
     }
 
@@ -292,6 +306,14 @@ def make_raw_freq_tidy(data, location):
                     if np.isnan(weekly_raw_freq[d, v])
                     else np.around(weekly_raw_freq[d, v], decimals=3))
             })
+
+            entries.append({
+                "location": location,
+                "site": "agg_counts",
+                "variant": variant,
+                "date": day.strftime("%Y-%m-%d"),
+                "value": None if np.isnan(agg_counts[d, v])
+                    else int(agg_counts[d, v])})
 
     return {"metadata": metadata, "data": entries}
 

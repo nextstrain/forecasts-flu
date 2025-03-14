@@ -19,10 +19,13 @@ def hier_MLR_numpyro(
     X,
     circulating_at_time,
     circulating_periods,
+    circulation_mask,
     tau=None,
     pool_scale=None,
     pred=False,
     var_names=None,
+    windowed=False,
+    simple_exclusion=False,
 ):
     _, N_variants, N_groups = seq_counts.shape
     _, N_features, _ = X.shape
@@ -88,34 +91,67 @@ def hier_MLR_numpyro(
     dot_by_group = vmap(jnp.dot, in_axes=(-1, -1), out_axes=-1)
     logits = dot_by_group(X, beta)  # Logit frequencies by variant
 
-    freq = jnp.zeros_like(logits)
-    seq_counts_gen = jnp.zeros_like(logits)
+    if windowed:
+        freq = jnp.zeros_like(logits)
+        seq_counts_gen = jnp.zeros_like(logits)
 
-    # Evaluate likelihood
-    obs = None if pred else np.nan_to_num(seq_counts)
-    for p, (t, circulating) in enumerate(circulating_periods):
-        _logits = logits[t[:, None], circulating, :]
+        # Evaluate likelihood
+        obs = None if pred else np.nan_to_num(seq_counts)
+        for p, (t, circulating) in enumerate(circulating_periods):
+            _logits = logits[t[:, None], circulating, :]
+            _seq_counts = numpyro.sample(
+                f"_seq_counts_{p}",
+                dist.MultinomialLogits(
+                    logits=_logits.swapaxes(1, 2),
+                    total_count=np.nan_to_num(N[t, :]),
+                ),
+                obs=None
+                if pred
+                else obs[t[:, None], circulating, :].swapaxes(1, 2),
+            )
+
+            freq = freq.at[t[:, None], circulating, :].set(
+                softmax(_logits, axis=1)
+            )
+            seq_counts_gen = seq_counts_gen.at[t[:, None], circulating, :].set(
+                jnp.swapaxes(_seq_counts, 1, 2)
+            )
+    elif simple_exclusion:
+        logits = logits.at[~circulation_mask, :].set(-10)
+        freq = jnp.full_like(logits, jnp.nan)
+        seq_counts_gen = jnp.zeros_like(logits)
+
+        # Evaluate likelihood
+        obs = None if pred else np.nan_to_num(seq_counts)
         _seq_counts = numpyro.sample(
-            f"_seq_counts_{p}",
+            "_seq_counts",
             dist.MultinomialLogits(
-                logits=_logits.swapaxes(1, 2),
-                total_count=np.nan_to_num(N[t, :]),
+                logits=logits.swapaxes(1, 2), total_count=np.nan_to_num(N)
             ),
-            obs=None
-            if pred
-            else obs[t[:, None], circulating, :].swapaxes(1, 2),
+            obs=None if pred else obs.swapaxes(1, 2),
         )
 
-        freq = freq.at[t[:, None], circulating, :].set(
-            softmax(_logits, axis=1)
+        freq = softmax(logits, axis=1)
+        seq_counts_gen = jnp.swapaxes(_seq_counts, 1, 2)
+    else:
+        # Evaluate likelihood
+        obs = None if pred else np.swapaxes(np.nan_to_num(seq_counts), 1, 2)
+
+        _seq_counts = numpyro.sample(
+            "_seq_counts",
+            dist.MultinomialLogits(
+                logits=jnp.swapaxes(logits, 1, 2), total_count=np.nan_to_num(N)
+            ),
+            obs=obs,
         )
-        seq_counts_gen = seq_counts_gen.at[t[:, None], circulating, :].set(
-            jnp.swapaxes(_seq_counts, 1, 2)
-        )
+
+        # Re-ordering so groups are last
+        seq_counts_gen = jnp.swapaxes(_seq_counts, 1, 2)
+        freq = softmax(logits, axis=1)
 
     # Compute frequency
     numpyro.deterministic("freq", freq)
-    numpyro.deterministic("seq_counts", seq_counts)
+    numpyro.deterministic("seq_counts", seq_counts_gen)
 
     # Compute growth advantage from model
     if tau is not None:
@@ -132,6 +168,8 @@ class HierMLR(ModelSpec):
         pool_scale: Optional[float] = None,
         left_buffer: Optional[int] = None,
         right_buffer: Optional[int] = None,
+        windowed: bool = False,
+        simple_exclusion: bool = False,
     ) -> None:
         """Construct ModelSpec for Hierarchial multinomial logistic regression.
 
@@ -158,6 +196,8 @@ class HierMLR(ModelSpec):
         self.model_fn = partial(hier_MLR_numpyro, pool_scale=self.pool_scale)
         self.left_buffer = left_buffer if left_buffer is not None else 0
         self.right_buffer = right_buffer if right_buffer is not None else 0
+        self.windowed = windowed
+        self.simple_exclusion = simple_exclusion
 
     @staticmethod
     def make_ols_feature(start, stop, n_groups):
@@ -181,12 +221,17 @@ class HierMLR(ModelSpec):
         T, G = data["N"].shape
         data["tau"] = self.tau
         data["X"] = self.make_ols_feature(0, T, G)
-        data["circulating_at_time"] = circulation_windows.find_circulating_at_time(
+        (
+            data["circulating_at_time"],
+            data["circulation_mask"],
+        ) = circulation_windows.find_circulating_at_time(
             data["seq_counts"], self.left_buffer, self.right_buffer
-        )[0]
+        )
         data["circulating_periods"] = circulation_windows.generate_minimal_windows(
             data["circulating_at_time"]
         )
+        data["windowed"] = self.windowed
+        data["simple_exclusion"] = self.simple_exclusion
 
     @staticmethod
     def forecast_frequencies(samples, forecast_L):
