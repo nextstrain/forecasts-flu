@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "build": "esbuild src/main.jsx --bundle --outfile=dist/main.js",
+    "start": "esbuild src/main.jsx --bundle --outfile=dist/main.js --watch --servedir=.",
+    "serve": "npx http-server"
+  },
+  "dependencies": {
+    "@nextstrain/evofr-viz": "file:nextstrain-evofr-viz-0.1.0.tgz",
+    "esbuild": "^0.25.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11"
+  }
+}
