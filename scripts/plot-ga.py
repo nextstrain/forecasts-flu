@@ -121,7 +121,7 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
                 ),
             columns=max_col_loc
             )
-    location_chart.save(out_loc)
+    location_chart.save(out_loc, ppi=300)
 
     # ### Plot GA by variant
     tooltip_attributes = [
@@ -166,7 +166,7 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
             ),
             columns=max_col_var
         )
-    variant_chart.save(out_var)
+    variant_chart.save(out_var, ppi=300)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot GA plots by location and variant.")
