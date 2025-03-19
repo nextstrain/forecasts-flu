@@ -8,14 +8,14 @@ import { PanelDisplay, useModelData } from '@nextstrain/evofr-viz';
  * Build up the config - change this as needed!
  */
 const config = []
-for (const subtype of ['h3n2', 'h1n1pdm']) {
+for (const subtype of ['h1n1pdm', 'h3n2', 'vic']) {
   for (const resolution of ['region', 'country']) {
     const name =`${subtype}/${resolution}`;
     config.push({
       modelName: name,
       modelUrl: `https://data.nextstrain.org/files/workflows/forecasts-flu/${subtype}/${resolution}/mlr/MLR_results.json`,
       frequency: {
-        title: `Forecast frequencies for ${subtype}/${resolution}`,
+        title: `Frequencies for ${subtype}/${resolution}`,
         description: "TKTK",
       },
       growthAdvantage: {
