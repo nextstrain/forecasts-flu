@@ -1,1 +1,1 @@
-s3_dst: "s3://nextstrain-data-private/files/workflows/forecasts-flu"
+s3_dst: "s3://nextstrain-data/files/workflows/forecasts-flu"

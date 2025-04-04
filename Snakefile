@@ -46,6 +46,17 @@ rule download_nextclade:
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
         """
 
+rule download_haplotype_definitions:
+    output:
+        haplotypes="results/{lineage}/haplotype_definitions.tsv",
+    shell:
+        """
+        curl \
+            -o {output.haplotypes} \
+            -L \
+            'https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/config/{wildcards.lineage}/ha/emerging_haplotypes.tsv'
+        """
+
 rule metadata_with_nextclade:
     input:
         metadata="data/{lineage}/metadata.tsv",
@@ -78,21 +89,23 @@ rule filter_data:
             --output-metadata {output.metadata}
         """
 
-rule update_metadata:
+rule assign_haplotypes:
     input:
         metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade.tsv",
-        mapping="config/{lineage}_mapping.tsv",
+        haplotypes="results/{lineage}/haplotype_definitions.tsv",
     output:
         metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade_updated.tsv"
     params:
-        variant_column=config["variant"],
+        variant_column=config["haplotype_variant_column"],
+        default_haplotype="other",
     shell:
         """
-        python scripts/update-metadata.py \
-            --input-metadata {input.metadata} \
-            --input-mapping {input.mapping} \
-            --variant-column {params.variant_column} \
-            --output {output.metadata}
+        python scripts/assign_haplotypes.py \
+            --substitutions {input.metadata} \
+            --haplotypes {input.haplotypes} \
+            --clade-column {params.variant_column:q} \
+            --default-haplotype {params.default_haplotype:q} \
+            --output-table {output.metadata}
         """
 
 rule clade_seq_counts:
@@ -213,7 +226,7 @@ rule download_auspice_config_json:
         curl \
             -o {output.config} \
             -L \
-            'https://raw.githubusercontent.com/nextstrain/seasonal-flu/master/profiles/nextflu-private/{wildcards.lineage}/ha/auspice_config.json'
+            'https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/profiles/nextflu-private/{wildcards.lineage}/ha/auspice_config.json'
         """
 
 rule plot_freq:
