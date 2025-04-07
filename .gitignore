@@ -10,3 +10,7 @@ plots
 
 # Sensitive environment variables
 environment*
+
+# viz related
+node_modules/
+dist/
