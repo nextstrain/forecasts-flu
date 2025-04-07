@@ -52,6 +52,15 @@ function getStartingTab() {
   return Object.keys(TABS).includes(query) ? query : Object.keys(TABS)[0];
 }
 
+/**
+ * Return the model datestring which may be set in the URL query
+ * (There is no UI for this yet beyond the query)
+ * TODO: add sanity checks, e.g. ensure it matches YYYY-MM-DD
+ */
+function getModelDate() {
+  return (new URLSearchParams(window.location.search)).get('date');
+}
+
 function modelUrl(subtypeResolution) {
   return `https://data.nextstrain.org/files/workflows/forecasts-flu/${subtypeResolution}/mlr/MLR_results.json`;
 }
@@ -60,6 +69,11 @@ function App() {
 
   const [tabSelected, setTabSelected] = React.useState(getStartingTab)
   const config = TABS[tabSelected];
+  let modelDate = getModelDate();
+  if (modelDate) {
+    config.modelUrl = config.modelUrl.replace(/([^/]+)$/, `${modelDate}_MLR_results.json`)
+  }
+
   // The `useModelData` hook downloads & parses the config-defined JSON
   const model = useModelData(config)
 
@@ -72,7 +86,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Influenza forecasts</h1>
+      <h1>Influenza forecasts {modelDate ? ` from ${modelDate}` : ''}</h1>
 
       <br/>
       <div className='tabContainer'>
