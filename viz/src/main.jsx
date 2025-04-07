@@ -4,6 +4,8 @@ import '@nextstrain/evofr-viz/dist/index.css';
 import { PanelDisplay, useModelData } from '@nextstrain/evofr-viz';
 
 
+import './styles.css';
+
 /**
  * Build up the config - change this as needed!
  */
@@ -36,8 +38,9 @@ function App() {
 
   return (
     <div className="App">
+      <h1>Influenza forecasts</h1>
+      <br/>
       <div id="mainPanelsContainer">
-
         {data.map((d, i) => (
           <>
             <h2>{config[i].frequency.title}</h2>
