@@ -86,9 +86,8 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Influenza forecasts {modelDate ? ` from ${modelDate}` : ''}</h1>
+      <p>{modelDate ? `Model data from ${modelDate}` : ''}</p>
 
-      <br/>
       <div className='tabContainer'>
         {Object.entries(TABS).map(([key, info]) => (
           <div className={`tab ${key===tabSelected ? 'selected' : ''}`} onClick={() => changeTab(key)} key={key}>
