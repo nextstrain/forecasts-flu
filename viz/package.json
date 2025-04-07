@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "esbuild src/main.jsx --bundle --outfile=dist/main.js",
-    "start": "esbuild src/main.jsx --bundle --outfile=dist/main.js --watch --servedir=.",
+    "start": "esbuild src/main.jsx --bundle --outfile=dist/main.js --watch --servedir=. --sourcemap",
     "serve": "npx http-server"
   },
   "dependencies": {
