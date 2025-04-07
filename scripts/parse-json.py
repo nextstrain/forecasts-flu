@@ -18,7 +18,7 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, model_
     Extracts empirical frequency and inferred frequency and fitness values from <model>_results.json.
     Parses "freq" and "ga" (growth advantage) from MLR model results.
     Parses "freq" and "delta" (relative fitness) and "ga" (growth advantage) from Latent model results.
-    Parses "daily_raw_freq" from MLR or Latent model as raw_freq.
+    Parses "raw_freq" from MLR or Latent model as raw_freq.
     """
 
     # Read in JSON file
@@ -45,9 +45,9 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, model_
 
         # Parse raw_freq from model if requested
         if output_raw:
-            print("Parsing daily_raw_freq from model results.")
+            print("Parsing raw_freq from model results.")
             for record in data["data"]:
-                if record["site"] == "daily_raw_freq":
+                if record["site"] == "raw_freq":
                     key = (record["location"], record["variant"], record["date"])
                     if key not in grouped_raw_freq:
                         grouped_raw_freq[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}

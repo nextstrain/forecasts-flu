@@ -102,7 +102,7 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
         plt.fill_between(data["date"], data["HDI_95_lower"], data["HDI_95_upper"], alpha=0.4, color=kwargs["color"])
     fig.map_dataframe(plot_with_ci)
 
-    # Plot the weekly_raw_freq
+    # Plot the raw_freq
     def plot_with_raw(data, **kwargs):
         raw_data = raw[(raw["location"] == data["location"].iloc[0]) & (raw["variant"] == data["variant"].iloc[0])]
         sns.scatterplot(data=raw_data, x="date", y="raw_freq", **kwargs, s=35, alpha = 1.0, legend=False)

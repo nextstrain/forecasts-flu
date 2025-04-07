@@ -257,8 +257,8 @@ def make_raw_freq_tidy(data, location):
     variants = data.var_names
     date_map = data.date_to_index
 
-    # Calculate daily raw frequencies
-    daily_raw_freq = data.seq_counts / data.seq_counts.sum(axis=1)[:, None]
+    # Calculate raw frequencies
+    raw_freq = data.seq_counts / data.seq_counts.sum(axis=1)[:, None]
 
     # agg_counts
     agg_counts = data.seq_counts
@@ -272,13 +272,13 @@ def make_raw_freq_tidy(data, location):
     denominator = np.convolve(total_counts, kernel, mode='same')
 
     # Calculate the 7-day smoothed daily frequency
-    weekly_raw_freq = numerator / denominator[:, None]
+    smoothed_raw_freq = numerator / denominator[:, None]
 
     # Create metadata
     metadata = {
         "dates": data.dates,
         "variants": data.var_names,
-        "sites": ["daily_raw_freq", "weekly_raw_freq", "agg_counts"],
+        "sites": ["raw_freq", "smoothed_raw_freq", "agg_counts"],
         "location": [location]
     }
 
@@ -288,23 +288,23 @@ def make_raw_freq_tidy(data, location):
         for day, d in date_map.items():
             entries.append({
                 "location": location,
-                "site": "daily_raw_freq",
+                "site": "raw_freq",
                 "variant": variant,
                 "date": day.strftime("%Y-%m-%d"),
                 "value": (
                     None
-                    if np.isnan(daily_raw_freq[d, v])
-                    else np.around(daily_raw_freq[d, v], decimals=3))
+                    if np.isnan(raw_freq[d, v])
+                    else np.around(raw_freq[d, v], decimals=3))
             })
             entries.append({
                 "location": location,
-                "site": "weekly_raw_freq",
+                "site": "smoothed_raw_freq",
                 "variant": variant,
                 "date": day.strftime("%Y-%m-%d"),
                 "value": (
                     None
-                    if np.isnan(weekly_raw_freq[d, v])
-                    else np.around(weekly_raw_freq[d, v], decimals=3))
+                    if np.isnan(smoothed_raw_freq[d, v])
+                    else np.around(smoothed_raw_freq[d, v], decimals=3))
             })
 
             entries.append({
