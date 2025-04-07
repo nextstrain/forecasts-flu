@@ -65,6 +65,25 @@ function modelUrl(subtypeResolution) {
   return `https://data.nextstrain.org/files/workflows/forecasts-flu/${subtypeResolution}/mlr/MLR_results.json`;
 }
 
+/**
+ * Returns a filtered list of the locations specified in the model data.
+ * If the URL-query defined 'locations' is set, we parse these as a comma-separated list
+ * and also filter to these (case-insensitive matching)
+ *
+ * @param {boolean} [hierarchical=true] If true, keep 'hierarchical' location
+ * @returns {array} locations
+ */
+function filterLocations(model, hierarchical=true) {
+  const queryLocations = ((new URLSearchParams(window.location.search)).get('locations') || '')
+    .split(',')
+    .map((loc) => loc.toLowerCase())
+    .filter((loc) => !!loc);
+
+  return (model?.modelData?.get('locations') || [])
+    .filter((loc) => hierarchical || loc!=='hierarchical')
+    .filter((loc) => queryLocations.length===0 || queryLocations.includes(loc.toLowerCase()));
+}
+
 function App() {
 
   const [tabSelected, setTabSelected] = React.useState(getStartingTab)
@@ -105,7 +124,7 @@ function App() {
                 {config.frequency.description}. Updated {model?.modelData?.get('updated') || 'loading'}.
               </p>
               <div className="frequencies panelDisplay">
-                <PanelDisplay data={model} params={config.frequency.params}/>
+                <PanelDisplay data={model} params={config.frequency.params} locations={filterLocations(model, false)}/>
               </div>
           </>
         )}
@@ -117,7 +136,7 @@ function App() {
                 {config.growthAdvantage.description}. Updated {model?.modelData?.get('updated') || 'loading'}.
               </p>
               <div className="panelDisplay">
-                <PanelDisplay data={model} params={config.growthAdvantage.params}/>
+                <PanelDisplay data={model} params={config.growthAdvantage.params} locations={filterLocations(model)}/>
               </div>
           </>
         )}
