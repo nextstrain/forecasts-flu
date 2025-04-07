@@ -2,7 +2,7 @@ name: Deploy Model Visualisation to GitHub Pages
 
 on:
   push:
-    branches: ['main', 'viz'] # TODO - remove 'viz' once this is in main
+    branches: ['main']
     paths: ['viz/**']
 
   # Allows you to run this workflow manually from the Actions tab
