@@ -1,4 +1,5 @@
 {
+  "name": "forecasts-influenza-viz",
   "scripts": {
     "build": "esbuild src/main.jsx --bundle --outfile=dist/main.js",
     "start": "esbuild src/main.jsx --bundle --outfile=dist/main.js --watch --servedir=. --sourcemap",
