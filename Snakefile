@@ -140,9 +140,9 @@ rule mlr_model:
         counts="results/{lineage}/{geo_resolution}/prepared_seq_counts.tsv",
         config="config/mlr/{lineage}.yaml",
     output:
-        model="results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
+        model="results/{lineage}/{geo_resolution}/mlr/initial_MLR_results.json",
     params:
-        run="MLR",
+        data_name="initial_MLR",
         path="results/{lineage}/{geo_resolution}/mlr/",
     benchmark:
         "results/{lineage}/{geo_resolution}/mlr/mlr-model_benchmark.tsv"
@@ -153,8 +153,25 @@ rule mlr_model:
         python -u ./scripts/run-model.py \
             --seq-path {input.counts} \
             --config {input.config} \
-            --data-name {params.run} \
+            --data-name {params.data_name} \
             --export-path {params.path}
+        """
+
+rule add_colors_to_mlr_model:
+    input:
+        model="results/{lineage}/{geo_resolution}/mlr/initial_MLR_results.json",
+        auspice_config="results/{lineage}/auspice_config.json",
+    output:
+        model="results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
+    params:
+        coloring_field=config["coloring_field"],
+    shell:
+        r"""
+        python scripts/add_colors_to_model.py \
+            --model {input.model:q} \
+            --auspice-config {input.auspice_config:q} \
+            --coloring-field {params.coloring_field:q} \
+            --output {output.model:q}
         """
 
 rule parse_mlr_json:
