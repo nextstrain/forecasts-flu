@@ -32,7 +32,7 @@ for (const [key,info] of Object.entries(TABS)) {
   info.modelUrl = modelUrl(key);
   info.frequency = {
     title: `Frequencies for ${info.displayName}`,
-    description: "TKTK",
+    description: "",
     params: {
       preset: "frequency",
       rawDataToggleName: "Raw Data",
@@ -41,7 +41,7 @@ for (const [key,info] of Object.entries(TABS)) {
   };
   info.growthAdvantage = {
     title: `Growth advantage for ${info.displayName}`,
-    description: "TKTK. Shown on a log2 scale",
+    description: "Growth advantages are shown on a log2 scale",
     params: {preset: "growthAdvantage", log2: true},
   };
   info.sites = {
