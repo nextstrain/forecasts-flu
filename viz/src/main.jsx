@@ -128,7 +128,7 @@ function App() {
       </div>
 
       <div className="panelsContainer" key={tabSelected}>
-    
+
         {config.frequency && (
           <>
               <h2>{config.frequency.title}</h2>
