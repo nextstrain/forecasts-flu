@@ -33,12 +33,24 @@ for (const [key,info] of Object.entries(TABS)) {
   info.frequency = {
     title: `Frequencies for ${info.displayName}`,
     description: "TKTK",
-    params: {preset: "frequency"},
+    params: {
+      preset: "frequency",
+      rawDataToggleName: "Raw Data",
+      smoothedDataToggleName: "Smoothed Raw Data",
+    },
   };
   info.growthAdvantage = {
     title: `Growth advantage for ${info.displayName}`,
     description: "TKTK. Shown on a log2 scale",
     params: {preset: "growthAdvantage", log2: true},
+  };
+  info.sites = {
+    freq: {
+      temporal: true,
+      raw: 'raw_freq',
+      smoothed: 'smoothed_raw_freq',
+      useForecast: true,
+    }
   };
 }
 
