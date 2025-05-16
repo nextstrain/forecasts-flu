@@ -19,6 +19,12 @@ Seasonal influenza variant growth rates and frequency forecast
 
 Edit `config/defaults.yaml` to set the minimum number of total sequences per location to use for modeling, the geographic resolution, date range for analysis, and variant column to use from Nextclade annotations.
 Edit the MLR model config per lineage `config/mlr-model/<lineage>.yaml` to define the pivot to use for relative growth advantage calculations.
+Define the generation time in days between infections divided by the aggregation frequency of the input count data.
+For example, the generation time for H3N2 is 3.1 days, so for a model fit based on 14-day aggregation of counts, set the generation time to 0.22.
+
+We define the variants used in these models in the seasonal-flu repository in one "emerging haplotypes" file per subtype and segment.
+To update the variants included in these results, update the corresponding files for [H1N1pdm](https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/config/h1n1pdm/ha/emerging_haplotypes.tsv), [H3N2](https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/config/h3n2/ha/emerging_haplotypes.tsv), or [Vic](https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/config/vic/ha/emerging_haplotypes.tsv) in that repository.
+Colors per haplotype are also defined in the corresponding Auspice config JSONs in the seasonal-flu repository.
 
 ## Run the workflow
 
