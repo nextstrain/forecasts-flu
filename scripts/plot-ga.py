@@ -11,11 +11,6 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
     # Read in GA file.
     df = pd.read_csv(input_file, sep="\t")
 
-    # Log transform GAs.
-    df["log_median"] = np.log2(df["median"])
-    df["log_HDI_95_lower"] = np.log2(df["HDI_95_lower"])
-    df["log_HDI_95_upper"] = np.log2(df["HDI_95_upper"])
-
     # If a location/variant list is specified, subset the GA.
     if loc_lst:
         loc_filter = list(pd.read_csv(loc_lst)["location"].values)
@@ -81,21 +76,21 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
     ### Plot GA by location
     tooltip_attributes = [
         "variant",
-        "log_HDI_95_lower",
-        "log_median",
-        "log_HDI_95_upper"
+        "HDI_95_lower",
+        "median",
+        "HDI_95_upper"
         ]
 
     points = base_chart.mark_circle(size=35).encode(
-        x=alt.X("log_median:Q", title=f"log growth advantage vs {pivot}"),
+        x=alt.X("median:Q", title=f"growth advantage vs {pivot}").scale(zero=False),
         y=alt.Y("variant:N", title="Variant", sort=locations),
         color=alt.Color("variant:N", scale=alt.Scale(domain=list(color_by_variant.keys()), range=list(color_by_variant.values()))),
         tooltip=tooltip_attributes
         )
 
     error_bars = base_chart.mark_line().encode(
-        x="log_HDI_95_lower:Q",
-        x2="log_HDI_95_upper:Q",
+        x=alt.X("HDI_95_lower:Q").scale(zero=False),
+        x2="HDI_95_upper:Q",
         y="variant:N",
         color=alt.Color("variant:N", scale=alt.Scale(domain=list(color_by_variant.keys()), range=list(color_by_variant.values()))),
         tooltip=tooltip_attributes
@@ -105,7 +100,7 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
         strokeWidth=0.25,
         strokeDash=[8, 8],
         ).encode(
-            x=alt.datum(0.0),
+            x=alt.datum(1.0),
             color=alt.ColorValue("gray")
             )
 
@@ -131,14 +126,14 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
         "HDI_95_upper"
         ]
     points = base_chart.mark_circle(size=35).encode(
-        x=alt.X("median:Q", title="Growth advantage"),
+        x=alt.X("median:Q", title="Growth advantage").scale(zero=False),
         y=alt.Y("location:N", title="Location", sort=locations),
         color=alt.Color("location:N", scale=alt.Scale(domain=list(color_by_location.keys()), range=list(color_by_location.values()))),
         tooltip=tooltip_attributes,
         )
 
     error_bars = base_chart.mark_line().encode(
-        x="HDI_95_lower:Q",
+        x=alt.X("HDI_95_lower:Q").scale(zero=False),
         x2="HDI_95_upper:Q",
         y=alt.Color("location:N", sort=locations),
         color=alt.Color("location:N", scale=alt.Scale(domain=list(color_by_location.keys()), range=list(color_by_location.values()))),
