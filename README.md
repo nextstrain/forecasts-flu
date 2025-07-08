@@ -2,6 +2,12 @@
 
 Seasonal influenza variant growth rates and frequency forecast
 
+## Data
+
+We gratefully acknowledge the authors, originating and submitting laboratories of sequences from the GISAID EpiFlu Database on which this research is based.
+The files produced by this workflow represent heavily derived GISAID data and are equivalent to downloadable results from [outbreak.info](https://outbreak.info), [cov-spectrum.org](https://cov-spectrum.org), and [covariants.org](https://covariants.org).
+This use is allowable under the [GISAID Terms of Use](https://www.gisaid.org/registration/terms-of-use/).
+
 ## Environment setup
 
 1. Create a GitHub token using [this link](https://github.com/settings/tokens/new?description=flu+geo+fitness&scopes=read:packages).
