@@ -84,7 +84,7 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
     points = base_chart.mark_circle(size=35).encode(
         x=alt.X("median:Q", title=f"growth advantage vs {pivot}").scale(zero=False),
         y=alt.Y("variant:N", title="Variant", sort=locations),
-        color=alt.Color("variant:N", scale=alt.Scale(domain=list(color_by_variant.keys()), range=list(color_by_variant.values()))),
+        color=alt.Color("variant:N", scale=alt.Scale(domain=list(color_by_variant.keys()), range=list(color_by_variant.values())), title="Variant"),
         tooltip=tooltip_attributes
         )
 
@@ -92,7 +92,7 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
         x=alt.X("HDI_95_lower:Q").scale(zero=False),
         x2="HDI_95_upper:Q",
         y="variant:N",
-        color=alt.Color("variant:N", scale=alt.Scale(domain=list(color_by_variant.keys()), range=list(color_by_variant.values()))),
+        color=alt.Color("variant:N", scale=alt.Scale(domain=list(color_by_variant.keys()), range=list(color_by_variant.values())), title="Variant"),
         tooltip=tooltip_attributes
         )
 

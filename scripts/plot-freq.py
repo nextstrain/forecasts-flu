@@ -108,7 +108,7 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
         sns.scatterplot(data=raw_data, x="date", y="raw_freq", **kwargs, s=35, alpha = 1.0, legend=False)
     fig.map_dataframe(plot_with_raw)
 
-    fig.add_legend(title="Variants")
+    fig.add_legend(title="Variant")
     sns.move_legend(
         fig,
         loc="upper right",
@@ -154,10 +154,10 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
     # Set these at the end, so they apply to every facet
     # Choose 0.005 and 0.92 as y-limits to avoid infinite logit transformations
     fig.set(yscale="logit")
-    fig.set(ylim=(0.018, 0.92))
+    fig.set(ylim=(0.018, 0.991))
     # Tick locations and labels:
-    fig.set(yticks=[0.02, 0.1, 0.2, 0.5, 0.8, 0.9])
-    fig.set(yticklabels=["2%", "10%", "20%", "50%", "80%", "90%"])
+    fig.set(yticks=[0.01, 0.1, 0.5, 0.9, 0.99])
+    fig.set(yticklabels=["1%", "10%", "50%", "90%", "99%"])
 
     # Disable minor ticks entirely
     for ax in fig.axes:
