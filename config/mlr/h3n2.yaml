@@ -13,7 +13,7 @@ settings:
   ps: [0.5, 0.8, 0.95] # HPDI intervals to be exported
 
 model:
-  forecast_L: 30
+  forecast_L: 6
   pool_scale: 0.25 # between 0.1 to 0.5
   generation_time: 0.22 # range: 3.1 days with range of 2.2–4.0 days (Carrat et al., 2008 https://academic.oup.com/aje/article/167/7/775/83777). Divide this number of days by the number of days in the aggregation interval above for proper GA calculation.
   pivot: "J.2"
