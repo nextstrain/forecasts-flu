@@ -99,6 +99,7 @@ class ModelConfig:
 
         # Processing generation time
         tau = parse_generation_time(model_cf)
+        forecast_L = parse_with_default(model_cf, "forecast_L", dflt=0)
         hier = parse_with_default(model_cf, "hierarchical", dflt=False)
         left_buffer = parse_with_default(model_cf, "left_buffer", dflt=0)
         right_buffer = parse_with_default(model_cf, "right_buffer", dflt=0)
@@ -149,6 +150,9 @@ class ModelConfig:
                 phi_model = LatentSplineRW(ef.Spline(order=order, k=k))
                 latent_dim = parse_with_default(model_cf, "latent_dim", dflt=4)
                 model = RelativeFitnessDR(dim=latent_dim, hier=False)
+
+        model.forecast_L = forecast_L
+
         return model, hier
 
     def load_optim(self):
@@ -191,6 +195,9 @@ def fit_models(rs, locations, model, inference_method, hier, path, save, pivot=N
         # Fit model
         posterior = inference_method.fit(model, data, name="hierarchical")
 
+        # Forecast frequencies
+        model.forecast_frequencies(posterior.samples, forecast_L=model.forecast_L)
+
         multi_posterior.add_posterior(posterior=posterior)
 
         if save:
@@ -209,6 +216,9 @@ def fit_models(rs, locations, model, inference_method, hier, path, save, pivot=N
 
             # Fit model
             posterior = inference_method.fit(model, data, name=location)
+
+            # Forecast frequencies
+            model.forecast_frequencies(posterior.samples, forecast_L=model.forecast_L)
 
             # Add posterior to group
             multi_posterior.add_posterior(posterior=posterior)
@@ -319,9 +329,9 @@ def make_raw_freq_tidy(data, location):
 
 # export results MLR model (with GA)
 def export_results_mlr(multi_posterior, ps, path, data_name, hier):
-    EXPORT_SITES = ["freq", "ga"]
-    EXPORT_DATED = [True, False]
-    EXPORT_FORECASTS = [False, False]
+    EXPORT_SITES = ["freq", "ga", "freq_forecast"]
+    EXPORT_DATED = [True, False, True]
+    EXPORT_FORECASTS = [False, False, True]
     EXPORT_ATTRS = ["pivot"]
 
     # Make directories
