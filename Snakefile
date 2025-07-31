@@ -157,6 +157,7 @@ rule mlr_model:
     params:
         data_name="initial_MLR",
         path="results/{lineage}/{geo_resolution}/mlr/",
+        max_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution].get("max_date", "0D"),
     benchmark:
         "results/{lineage}/{geo_resolution}/mlr/mlr-model_benchmark.tsv"
     resources:
@@ -167,7 +168,8 @@ rule mlr_model:
             --seq-path {input.counts} \
             --config {input.config} \
             --data-name {params.data_name} \
-            --export-path {params.path}
+            --export-path {params.path} \
+            --max-date {params.max_date:q}
         """
 
 rule add_colors_to_mlr_model:

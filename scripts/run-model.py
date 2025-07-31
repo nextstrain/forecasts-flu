@@ -180,13 +180,13 @@ class ModelConfig:
         return fit, save, load, export_json, export_path
 
 
-def fit_models(rs, locations, model, inference_method, hier, path, save, pivot=None, aggregation_frequency=None):
+def fit_models(rs, locations, model, inference_method, hier, path, save, pivot=None, max_date=None, aggregation_frequency=None):
     multi_posterior = ef.MultiPosterior()
 
     if hier:
         # Subset data to locations of interest
         raw_seq = rs[rs.location.isin(locations)]
-        data = hier_frequencies.HierFrequencies(raw_seq=raw_seq, pivot=pivot, group="location", aggregation_frequency=aggregation_frequency)
+        data = hier_frequencies.HierFrequencies(raw_seq=raw_seq, pivot=pivot, group="location", max_date=max_date, aggregation_frequency=aggregation_frequency)
 
         # Fit model
         posterior = inference_method.fit(model, data, name="hierarchical")
@@ -495,6 +495,11 @@ if __name__ == "__main__":
         help="Whether to run the model as hierarchical. Overrides model.hierarchical in config. "
         + "Default is false if unspecified."
     )
+
+    parser.add_argument(
+        "--max-date",
+        help="Latest date in ISO 8601 format (YYYY-MM-DD) or backward-looking relative date in ISO 8601 duration (e.g., '14D' or 'P14D') for observed frequency estimation. Any aggregation frequency operates backward in time from this date. If this date isn't provided, the latest date from the given sequence counts data will be used.",
+    )
     args = parser.parse_args()
 
     # Load configuration, data, and create model
@@ -549,6 +554,7 @@ if __name__ == "__main__":
             export_path,
             save,
             pivot=pivot,
+            max_date=args.max_date,
             aggregation_frequency=aggregation_frequency
         )
     elif load:
