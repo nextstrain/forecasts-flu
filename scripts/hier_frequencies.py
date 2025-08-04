@@ -1,3 +1,5 @@
+import datetime
+import isodate
 import numpy as np
 import pandas as pd
 from typing import Optional
@@ -18,6 +20,7 @@ class HierFrequencies(DataSpec):
         group: str,
         date_to_index: Optional[dict] = None,
         pivot: Optional[str] = None,
+        max_date: Optional[str] = None,
         aggregation_frequency: Optional[str] = None,
     ):
         """Construct a data specification for handling variant frequencies
@@ -40,6 +43,12 @@ class HierFrequencies(DataSpec):
             Defaults to "other" if present otherwise.
             This will usually used as a reference or pivot strain.
 
+        max_date:
+            optional date or backwards looking relative ISO 8601 duration
+            to use as the latest date for observed frequency estimates. When not
+            provided, the maximum date from the given sequence counts will be
+            used.
+
         aggregation_frequency:
             optional temporal frequency used to aggregate daily counts to
             larger time periods such as "W" (week) or "M" (month).
@@ -47,6 +56,7 @@ class HierFrequencies(DataSpec):
         Returns
         -------
         HierFrequencies
+
         """
         # Get date to index
         if date_to_index is None:
@@ -68,6 +78,24 @@ class HierFrequencies(DataSpec):
         ]
 
         # Aggregate counts into larger windows
+
+        if max_date is not None:
+            # First, parse max date as either an ISO-8601 date string
+            # (YYYY-MM-DD) or as a relative duration.
+            try:
+                self.max_date = pd.Timestamp(max_date)
+            except ValueError:
+                if not max_date.startswith('P'):
+                    max_date = "P" + max_date
+
+                self.max_date = pd.Timestamp(
+                    datetime.date.today() - isodate.parse_duration(max_date)
+                )
+        else:
+            self.max_date = max(self.dates)
+
+        print(f"Using max date of {self.max_date}")
+
         self.aggregation_frequency = aggregation_frequency
         if self.aggregation_frequency is not None:
             (
@@ -75,7 +103,7 @@ class HierFrequencies(DataSpec):
                 self.dates,
                 self.date_to_index,
             ) = temporal_aggregation.aggregate_temporally_hierarchical(
-                self.groups, self.dates, self.aggregation_frequency
+                self.groups, self.dates, self.max_date, self.aggregation_frequency
             )
 
         self.seq_counts = np.stack(

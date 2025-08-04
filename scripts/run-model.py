@@ -99,6 +99,7 @@ class ModelConfig:
 
         # Processing generation time
         tau = parse_generation_time(model_cf)
+        forecast_L = parse_with_default(model_cf, "forecast_L", dflt=0)
         hier = parse_with_default(model_cf, "hierarchical", dflt=False)
         left_buffer = parse_with_default(model_cf, "left_buffer", dflt=0)
         right_buffer = parse_with_default(model_cf, "right_buffer", dflt=0)
@@ -149,6 +150,9 @@ class ModelConfig:
                 phi_model = LatentSplineRW(ef.Spline(order=order, k=k))
                 latent_dim = parse_with_default(model_cf, "latent_dim", dflt=4)
                 model = RelativeFitnessDR(dim=latent_dim, hier=False)
+
+        model.forecast_L = forecast_L
+
         return model, hier
 
     def load_optim(self):
@@ -180,16 +184,19 @@ class ModelConfig:
         return fit, save, load, export_json, export_path
 
 
-def fit_models(rs, locations, model, inference_method, hier, path, save, pivot=None, aggregation_frequency=None):
+def fit_models(rs, locations, model, inference_method, hier, path, save, pivot=None, max_date=None, aggregation_frequency=None):
     multi_posterior = ef.MultiPosterior()
 
     if hier:
         # Subset data to locations of interest
         raw_seq = rs[rs.location.isin(locations)]
-        data = hier_frequencies.HierFrequencies(raw_seq=raw_seq, pivot=pivot, group="location", aggregation_frequency=aggregation_frequency)
+        data = hier_frequencies.HierFrequencies(raw_seq=raw_seq, pivot=pivot, group="location", max_date=max_date, aggregation_frequency=aggregation_frequency)
 
         # Fit model
         posterior = inference_method.fit(model, data, name="hierarchical")
+
+        # Forecast frequencies
+        model.forecast_frequencies(posterior.samples, forecast_L=model.forecast_L)
 
         multi_posterior.add_posterior(posterior=posterior)
 
@@ -209,6 +216,9 @@ def fit_models(rs, locations, model, inference_method, hier, path, save, pivot=N
 
             # Fit model
             posterior = inference_method.fit(model, data, name=location)
+
+            # Forecast frequencies
+            model.forecast_frequencies(posterior.samples, forecast_L=model.forecast_L)
 
             # Add posterior to group
             multi_posterior.add_posterior(posterior=posterior)
@@ -319,9 +329,9 @@ def make_raw_freq_tidy(data, location):
 
 # export results MLR model (with GA)
 def export_results_mlr(multi_posterior, ps, path, data_name, hier):
-    EXPORT_SITES = ["freq", "ga"]
-    EXPORT_DATED = [True, False]
-    EXPORT_FORECASTS = [False, False]
+    EXPORT_SITES = ["freq", "ga", "freq_forecast"]
+    EXPORT_DATED = [True, False, True]
+    EXPORT_FORECASTS = [False, False, True]
     EXPORT_ATTRS = ["pivot"]
 
     # Make directories
@@ -495,6 +505,11 @@ if __name__ == "__main__":
         help="Whether to run the model as hierarchical. Overrides model.hierarchical in config. "
         + "Default is false if unspecified."
     )
+
+    parser.add_argument(
+        "--max-date",
+        help="Latest date in ISO 8601 format (YYYY-MM-DD) or backward-looking relative date in ISO 8601 duration (e.g., '14D' or 'P14D') for observed frequency estimation. Any aggregation frequency operates backward in time from this date. If this date isn't provided, the latest date from the given sequence counts data will be used.",
+    )
     args = parser.parse_args()
 
     # Load configuration, data, and create model
@@ -549,6 +564,7 @@ if __name__ == "__main__":
             export_path,
             save,
             pivot=pivot,
+            max_date=args.max_date,
             aggregation_frequency=aggregation_frequency
         )
     elif load:
