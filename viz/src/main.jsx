@@ -41,8 +41,8 @@ for (const [key,info] of Object.entries(TABS)) {
   };
   info.growthAdvantage = {
     title: `Growth advantage for ${info.displayName}`,
-    description: "Growth advantages are shown on a log2 scale",
-    params: {preset: "growthAdvantage", log2: true},
+    description: "",
+    params: {preset: "growthAdvantage"},
   };
   info.sites = {
     freq: {
