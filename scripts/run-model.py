@@ -123,11 +123,15 @@ class ModelConfig:
                 print("Running hier MLR model")
                 ps = parse_pool_scale(model_cf)
                 print("Hierarchical pool scale:", ps)
+                xi_prior = parse_with_default(model_cf, "xi_prior", dflt=None)
+                xi_by_group = parse_with_default(model_cf, "xi_by_group", dflt=False)
                 left_buffer = parse_with_default(model_cf, "left_buffer", dflt=0)
                 right_buffer = parse_with_default(model_cf, "right_buffer", dflt=0)
                 model = hier_mlr.HierMLR(
                     tau=tau,
                     pool_scale=ps,
+                    xi_prior=xi_prior,
+                    xi_by_group=xi_by_group,
                     left_buffer=left_buffer,
                     right_buffer=right_buffer,
                     windowed=windowed,
