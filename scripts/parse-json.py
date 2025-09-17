@@ -13,7 +13,7 @@ def write_outfile(output_site, grouped_site):
                 writer.writerow(record)
 
 
-def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, model_version):
+def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, output_freq_forecast, model_version):
     """
     Extracts empirical frequency and inferred frequency and fitness values from <model>_results.json.
     Parses "freq" and "ga" (growth advantage) from MLR model results.
@@ -42,6 +42,20 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, model_
         # Write output <model>/freq.tsv
         print("Parsing freq from model results.")
         write_outfile(output_freq, grouped_freq)
+
+        # Parse forecast freq from MLR model
+        if output_freq_forecast:
+            print("Parsing forecast freq from model results.")
+            grouped_freq_forecast = {}
+            for record in data["data"]:
+                if record["site"] == "freq_forecast" and record["ps"] in ["median", "HDI_95_upper", "HDI_95_lower"]:
+                    key = (record["location"], record["variant"], record["date"])
+                    if key not in grouped_freq_forecast:
+                        grouped_freq_forecast[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}
+                    grouped_freq_forecast[key][record["ps"]] = record["value"]
+
+            # Write output <model>/freq.tsv
+            write_outfile(output_freq_forecast, grouped_freq_forecast)
 
         # Parse raw_freq from model if requested
         if output_raw:
@@ -98,6 +112,7 @@ if __name__ == "__main__":
     parser.add_argument("--outrf", required=False, help="Path to filtered and parsed RF (relative fitness) TSV file (latent/rf.tsv)")
     parser.add_argument("--outfreq", required=True, help="Path to filtered and parsed freq TSV file (<model>/freq.tsv)")
     parser.add_argument("--outraw", required=False, help="Path to empirical freq TSV file (raw_freq.tsv)")
+    parser.add_argument("--outfreqforecast", help="Path to forecast frequencies TSV file")
     parser.add_argument("--model", required=True, help="Model version ['Latent', 'MLR']")
     args = parser.parse_args()
-    parse_json(args.input, args.outga, args.outrf, args.outfreq, args.outraw, args.model)
+    parse_json(args.input, args.outga, args.outrf, args.outfreq, args.outraw, args.outfreqforecast, args.model)

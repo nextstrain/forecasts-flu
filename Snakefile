@@ -196,6 +196,7 @@ rule parse_mlr_json:
         ga="results/{lineage}/{geo_resolution}/mlr/ga.tsv",
         freq="results/{lineage}/{geo_resolution}/mlr/freq.tsv",
         emp="results/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
+        freq_forecast="results/{lineage}/{geo_resolution}/mlr/freq_forecast.tsv",
     params:
         version="MLR",
     shell:
@@ -205,6 +206,7 @@ rule parse_mlr_json:
             --outga {output.ga} \
             --outfreq {output.freq} \
             --outraw {output.emp} \
+            --outfreqforecast {output.freq_forecast} \
             --model {params.version}
         """
 
