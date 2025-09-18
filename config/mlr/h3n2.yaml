@@ -19,6 +19,8 @@ model:
   pivot: "J.2.2"
   hierarchical: true # Keep hierarchical for analysis across regions
   version: "MLR"
+  xi_prior: true
+  xi_by_group: true
 
 inference:
   method: "NUTS"
