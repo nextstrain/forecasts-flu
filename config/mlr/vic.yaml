@@ -20,6 +20,8 @@ model:
   location_ga_inclusion_threshold: 10
   hierarchical: true # Keep hierarchical for analysis across regions
   version: "MLR"
+  xi_prior: 1.0
+  xi_by_group: false
 
 inference:
   method: "NUTS"
