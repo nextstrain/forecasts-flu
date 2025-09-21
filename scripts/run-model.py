@@ -20,9 +20,10 @@ from latent_immunity_relative_fitness import LatentSplineRW
 
 def parse_with_default(cf, var, dflt):
     if var in cf:
+        print(f"Supplied value of {cf[var]} for {var}")
         return cf[var]
     else:
-        print(f"Using default value for {var}")
+        print(f"Default value of {dflt} for {var}")
         return dflt
 
 def parse_generation_time(cf_m):
