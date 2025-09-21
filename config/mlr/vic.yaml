@@ -17,6 +17,7 @@ model:
   pool_scale: 0.25 # between 0.1 to 0.5
   generation_time: 0.24 # 3.4 days from Carrat et al. 2008 (https://academic.oup.com/aje/article/167/7/775/83777). Divide generation time in days by the number of days in the aggregation frequency above for proper GA calculations.
   pivot: "C.5"
+  location_ga_inclusion_threshold: 10
   hierarchical: true # Keep hierarchical for analysis across regions
   version: "MLR"
 
