@@ -21,7 +21,7 @@ model:
   hierarchical: true # Keep hierarchical for analysis across regions
   version: "MLR"
   xi_prior: 1.0
-  xi_by_group: true
+  xi_by_group: false
 
 inference:
   method: "NUTS"
