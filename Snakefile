@@ -177,7 +177,7 @@ rule add_colors_to_mlr_model:
         model="results/{lineage}/{geo_resolution}/mlr/initial_MLR_results.json",
         auspice_config="results/{lineage}/auspice_config.json",
     output:
-        model="results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
+        model="results/{lineage}/{geo_resolution}/mlr/MLR_results_with_colors.json",
     params:
         coloring_field=config["coloring_field"],
     shell:
@@ -188,6 +188,34 @@ rule add_colors_to_mlr_model:
             --coloring-field {params.coloring_field:q} \
             --output {output.model:q}
         """
+
+rule add_global_to_regional_mlr:
+    input:
+        model="results/{lineage}/region/mlr/MLR_results_with_colors.json",
+        regional_weights="config/regional_population_weights.tsv"
+    output:
+        model="results/{lineage}/region/mlr/MLR_results.json"
+    params:
+        aggregate_regions=config.get("aggregate_regions", False)
+    run:
+        if params.aggregate_regions and wildcards.lineage in config["lineages"]:
+            shell("""
+                python scripts/add_global_to_mlr_results.py \
+                    --input-json {input.model} \
+                    --regional-weights {input.regional_weights} \
+                    --output-json {output.model}
+            """)
+        else:
+            shell("cp {input.model} {output.model}")
+
+# For non-region geo_resolutions, just copy the file
+rule finalize_country_mlr:
+    input:
+        model="results/{lineage}/country/mlr/MLR_results_with_colors.json",
+    output:
+        model="results/{lineage}/country/mlr/MLR_results.json",
+    shell:
+        "cp {input.model} {output.model}"
 
 rule parse_mlr_json:
     input:
