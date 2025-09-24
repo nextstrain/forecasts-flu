@@ -3,7 +3,7 @@ data:
   name: "MLR" # Model version
   case_path: "data/test/prepared_cases.tsv"
   seq_path: "results/h1n1pdm_2024-02/variant_seq_counts_subyr_subloc.tsv"
-  aggregation_frequency: "14D"
+  aggregation_frequency: "7D"
 
 settings:
   fit: true # Fit the model?
