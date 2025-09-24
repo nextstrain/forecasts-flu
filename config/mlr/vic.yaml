@@ -3,7 +3,7 @@ data:
   name: "MLR" # Model version
   case_path: "data/test/prepared_cases.tsv"
   seq_path: "results/vic_2024-02/variant_seq_counts_subyr_subloc.tsv"
-  aggregation_frequency: "14D"
+  aggregation_frequency: "7D"
 
 settings:
   fit: true # Fit the model?
@@ -13,9 +13,9 @@ settings:
   ps: [0.5, 0.8, 0.95] # HPDI intervals to be exported
 
 model:
-  forecast_L: 26
+  forecast_L: 52
   pool_scale: 0.25 # between 0.1 to 0.5
-  generation_time: 0.24 # 3.4 days from Carrat et al. 2008 (https://academic.oup.com/aje/article/167/7/775/83777). Divide generation time in days by the number of days in the aggregation frequency above for proper GA calculations.
+  generation_time: 0.49 # 3.4 days from Carrat et al. 2008 (https://academic.oup.com/aje/article/167/7/775/83777). Divide generation time in days by the number of days in the aggregation frequency above for proper GA calculations.
   pivot: "C.5"
   location_ga_inclusion_threshold: 10
   hierarchical: true # Keep hierarchical for analysis across regions
