@@ -154,10 +154,10 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
     # Set these at the end, so they apply to every facet
     # Choose 0.005 and 0.92 as y-limits to avoid infinite logit transformations
     fig.set(yscale="logit")
-    fig.set(ylim=(0.018, 0.991))
+    fig.set(ylim=(0.018, 0.92))
     # Tick locations and labels:
-    fig.set(yticks=[0.01, 0.1, 0.5, 0.9, 0.99])
-    fig.set(yticklabels=["1%", "10%", "50%", "90%", "99%"])
+    fig.set(yticks=[0.01, 0.1, 0.5, 0.9])
+    fig.set(yticklabels=["1%", "10%", "50%", "90%"])
 
     # Disable minor ticks entirely
     for ax in fig.axes:
@@ -166,7 +166,7 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
     fig.figure.subplots_adjust(wspace=0.25)
     sns.despine()
 
-    fig.savefig(output_plot, bbox_inches="tight")
+    fig.savefig(output_plot, bbox_inches="tight", dpi=300)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot Freq plots by location and variant.")
