@@ -30,6 +30,6 @@ prepare_data:
     location_min_seq: 150
     clade_min_seq: 30
 
-haplotype_variant_column: "subclade"
+haplotype_variant_column: "clade"
 variant: "haplotype"
 coloring_field: "emerging_haplotype"
