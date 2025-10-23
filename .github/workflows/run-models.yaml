@@ -1,10 +1,6 @@
 name: Run models
 
-on:
-  repository_dispatch:
-    types:
-      - run-models
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
   run_models:
