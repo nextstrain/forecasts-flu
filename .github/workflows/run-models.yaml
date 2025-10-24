@@ -1,6 +1,12 @@
 name: Run models
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      dockerImage:
+        description: "Specific container image to use for build (will override the default of `nextstrain build`)"
+        required: false
+        type: string
 
 jobs:
   run_models:
@@ -10,12 +16,13 @@ jobs:
     secrets: inherit
     with:
       runtime: aws-batch
+      env: |
+        NEXTSTRAIN_DOCKER_IMAGE: ${{ inputs.dockerImage }}
       run: |
         nextstrain build \
           --aws-batch \
           --detach \
           --no-download \
-          --image nextstrain/base \
           --cpus 8 \
           --memory 16GiB \
           --env AWS_DEFAULT_REGION \
