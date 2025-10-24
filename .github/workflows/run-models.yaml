@@ -16,8 +16,6 @@ jobs:
     secrets: inherit
     with:
       runtime: aws-batch
-      env: |
-        NEXTSTRAIN_DOCKER_IMAGE: ${{ inputs.dockerImage }}
       run: |
         nextstrain build \
           --aws-batch \
@@ -31,4 +29,5 @@ jobs:
             --configfile config/defaults.yaml config/optional.yaml \
             --keep-going
       env: |
+        NEXTSTRAIN_DOCKER_IMAGE: ${{ inputs.dockerImage }}
         GITHUB_RUN_ID: ${{ github.run_id }}
