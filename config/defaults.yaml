@@ -33,3 +33,5 @@ prepare_data:
 haplotype_variant_column: "clade"
 variant: "haplotype"
 coloring_field: "emerging_haplotype"
+
+aggregate_regions: true  # Set to true to add Global region to regional MLR results
