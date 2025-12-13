@@ -1,13 +1,21 @@
 data:
-  h3n2:
-    s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/metadata.tsv.xz"
-    s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/ha/nextclade.tsv.xz"
-  h1n1pdm:
-    s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/metadata.tsv.xz"
-    s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/ha/nextclade.tsv.xz"
-  vic:
-    s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/metadata.tsv.xz"
-    s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/ha/nextclade.tsv.xz"
+  gisaid:
+    h3n2:
+      s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/metadata.tsv.xz"
+      s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/ha/nextclade.tsv.xz"
+    h1n1pdm:
+      s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/metadata.tsv.xz"
+      s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/ha/nextclade.tsv.xz"
+    vic:
+      s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/metadata.tsv.xz"
+      s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/ha/nextclade.tsv.xz"
+
+data_provenances:
+  - gisaid
+
+variant_classifications:
+  - emerging_haplotype
+  - aa_haplotype
 
 lineages:
   - h1n1pdm
@@ -18,18 +26,25 @@ geo_resolutions:
   - country
   - region
 
+min_date: "6M"
+max_date: "0D"
+
 prepare_data:
-  country:
-    min_date: "6M"
-    max_date: "0D"
-    location_min_seq: 150
-    clade_min_seq: 30
-  region:
-    min_date: "6M"
-    max_date: "0D"
-    location_min_seq: 150
-    clade_min_seq: 30
+  gisaid:
+    emerging_haplotype:
+      country:
+        location_min_seq: 150
+        clade_min_seq: 30
+      region:
+        location_min_seq: 150
+        clade_min_seq: 30
+    aa_haplotype:
+      country:
+        location_min_seq: 150
+        clade_min_seq: 30
+      region:
+        location_min_seq: 150
+        clade_min_seq: 30
 
 haplotype_variant_column: "clade"
-variant: "haplotype"
-coloring_field: "emerging_haplotype"
+mutations_column: "founderMuts['clade'].aaSubstitutions"
