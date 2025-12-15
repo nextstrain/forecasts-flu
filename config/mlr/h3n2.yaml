@@ -16,7 +16,7 @@ model:
   forecast_L: 52
   pool_scale: 0.25 # between 0.1 to 0.5
   generation_time: 0.44 # range: 3.1 days with range of 2.2–4.0 days (Carrat et al., 2008 https://academic.oup.com/aje/article/167/7/775/83777). Divide this number of days by the number of days in the aggregation interval above for proper GA calculation.
-  pivot: "J.2.2"
+  pivot: "J.2.4"
   location_ga_inclusion_threshold: 10
   hierarchical: true # Keep hierarchical for analysis across regions
   version: "MLR"
