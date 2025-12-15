@@ -33,17 +33,17 @@ prepare_data:
   gisaid:
     emerging_haplotype:
       country:
-        location_min_seq: 150
+        location_min_seq: 100
         clade_min_seq: 30
       region:
-        location_min_seq: 150
+        location_min_seq: 100
         clade_min_seq: 30
     aa_haplotype:
       country:
-        location_min_seq: 150
+        location_min_seq: 100
         clade_min_seq: 30
       region:
-        location_min_seq: 150
+        location_min_seq: 100
         clade_min_seq: 30
 
 haplotype_variant_column: "clade"
