@@ -26,6 +26,10 @@ def plot_ga(input_file, virus, color_file, out_var, out_loc, loc_lst, var_lst, p
 
     df = df[df["location"].isin(loc_filter)]
     df = df[df["variant"].isin(var_filter)]
+
+    # Exclude "Global" from GA plots
+    df = df[df["location"] != "Global"]
+
     base_chart = alt.Chart(df)
 
     # Parse pivot from file
