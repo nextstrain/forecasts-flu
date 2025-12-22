@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useMemo} from 'react'
 import ReactDOM from 'react-dom/client'
 import '@nextstrain/evofr-viz/dist/index.css';
 import { PanelDisplay, useModelData } from '@nextstrain/evofr-viz';
@@ -29,10 +29,7 @@ const TABS = {
 }
 for (const [key,info] of Object.entries(TABS)) {
   info.modelName = key;
-  info.modelUrl = modelUrl(key);
   info.frequency = {
-    title: `Frequencies for ${info.displayName}`,
-    description: "",
     params: {
       preset: "frequency",
       rawDataToggleName: "Raw Data",
@@ -40,8 +37,6 @@ for (const [key,info] of Object.entries(TABS)) {
     },
   };
   info.growthAdvantage = {
-    title: `Growth advantage for ${info.displayName}`,
-    description: "",
     params: {preset: "growthAdvantage"},
   };
   info.sites = {
@@ -73,8 +68,14 @@ function getModelDate() {
   return (new URLSearchParams(window.location.search)).get('date');
 }
 
-function modelUrl(subtypeResolution) {
-  return `https://data.nextstrain.org/files/workflows/forecasts-flu/${subtypeResolution}/mlr/MLR_results.json`;
+function modelUrl(variantClassification, subtypeResolution, modelDate) {
+  let url = `https://data.nextstrain.org/files/workflows/forecasts-flu/gisaid/${variantClassification}/${subtypeResolution}/mlr/MLR_results.json`;
+
+  if (modelDate) {
+    url = url.replace(/([^/]+)$/, `${modelDate}_MLR_results.json`);
+  }
+
+  return url;
 }
 
 /**
@@ -98,15 +99,25 @@ function filterLocations(model, hierarchical=true) {
 
 function App() {
 
-  const [tabSelected, setTabSelected] = React.useState(getStartingTab)
-  const config = TABS[tabSelected];
   let modelDate = getModelDate();
-  if (modelDate) {
-    config.modelUrl = config.modelUrl.replace(/([^/]+)$/, `${modelDate}_MLR_results.json`)
-  }
+  const [tabSelected, setTabSelected] = React.useState(getStartingTab);
+
+  /* configuration for the viz depends on the tab selected. Wrap this in
+     `useMemo` so that we only reconstruct it when the tab changes. Because the
+     data fetching (via `useModelData`) is triggered each time the config
+     changes we need to avoid recreating this config object else we get into an
+     infinite loop of data fetches!
+    */
+  const config = useMemo(() => {
+    return {
+      emergingHaplotype: Object.assign({}, TABS[tabSelected], {modelUrl: modelUrl("emerging_haplotype", tabSelected, modelDate)}),
+      aaHaplotype:       Object.assign({}, TABS[tabSelected], {modelUrl: modelUrl("aa_haplotype",       tabSelected, modelDate)}),
+    }
+  }, [tabSelected])
 
   // The `useModelData` hook downloads & parses the config-defined JSON
-  const model = useModelData(config)
+  const modelEmergingHaplotype = useModelData(config.emergingHaplotype);
+  const modelAAHaplotype = useModelData(config.aaHaplotype);
 
   function changeTab(key) {
     setTabSelected(key);
@@ -129,26 +140,50 @@ function App() {
 
       <div className="panelsContainer" key={tabSelected}>
 
-        {config.frequency && (
+        {config.emergingHaplotype.frequency && (
           <>
-              <h2>{config.frequency.title}</h2>
+            <h2>Emerging haplotype frequencies for {TABS[tabSelected].displayName}</h2>
               <p>
-                {config.frequency.description}. Updated {model?.modelData?.get('updated') || 'loading'}.
+                Updated {modelEmergingHaplotype?.modelData?.get('updated') || 'loading'}.
               </p>
               <div className="frequencies panelDisplay">
-                <PanelDisplay data={model} params={config.frequency.params} locations={filterLocations(model, false)}/>
+                <PanelDisplay data={modelEmergingHaplotype} params={config.emergingHaplotype.frequency.params} locations={filterLocations(modelEmergingHaplotype, false)}/>
               </div>
           </>
         )}
 
         {TABS[tabSelected].growthAdvantage && (
           <>
-              <h2>{config.growthAdvantage.title}</h2>
+            <h2>Emerging haplotype growth advantages for {TABS[tabSelected].displayName}</h2>
               <p>
-                {config.growthAdvantage.description}. Updated {model?.modelData?.get('updated') || 'loading'}.
+                Updated {modelEmergingHaplotype?.modelData?.get('updated') || 'loading'}.
               </p>
               <div className="panelDisplay">
-                <PanelDisplay data={model} params={config.growthAdvantage.params} locations={filterLocations(model)}/>
+                <PanelDisplay data={modelEmergingHaplotype} params={config.emergingHaplotype.growthAdvantage.params} locations={filterLocations(modelEmergingHaplotype)}/>
+              </div>
+          </>
+        )}
+
+        {config.aaHaplotype.frequency && (
+          <>
+            <h2>Amino acid haplotype frequencies for {TABS[tabSelected].displayName}</h2>
+              <p>
+                Updated {modelAAHaplotype?.modelData?.get('updated') || 'loading'}.
+              </p>
+              <div className="frequencies panelDisplay">
+                <PanelDisplay data={modelAAHaplotype} params={config.aaHaplotype.frequency.params} locations={filterLocations(modelAAHaplotype, false)}/>
+              </div>
+          </>
+        )}
+
+        {TABS[tabSelected].growthAdvantage && (
+          <>
+              <h2>Amino acid haplotype growth advantages for {TABS[tabSelected].displayName}</h2>
+              <p>
+                Updated {modelAAHaplotype?.modelData?.get('updated') || 'loading'}.
+              </p>
+              <div className="panelDisplay">
+                <PanelDisplay data={modelAAHaplotype} params={config.aaHaplotype.growthAdvantage.params} locations={filterLocations(modelAAHaplotype)}/>
               </div>
           </>
         )}
