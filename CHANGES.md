@@ -6,6 +6,10 @@ This changelog is intended for _humans_ and follows many of the principles from 
 Changes for this project _do not_ currently follow the [Semantic Versioning rules](https://semver.org/spec/v2.0.0.html).
 Instead, changes appear below grouped by the date they were added to the workflow.
 
+# 23 December 2025
+
+ - Add frequency and fitness estimates for amino acid haplotypes for each subtype and geographic resolution. See [#26](https://github.com/nextstrain/forecasts-flu/pull/26) for details.
+
 # 4 August 2025
 
  - Enable forecasts for MLR models using a forecast horizon of 6 steps with a frequency estimation interval of 14-days to produce 84-day forecasts. See [#18](https://github.com/nextstrain/forecasts-flu/pull/18) for details.
