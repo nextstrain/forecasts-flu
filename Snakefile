@@ -1,7 +1,10 @@
 configfile: "config/defaults.yaml"
 
 wildcard_constraints:
-    date = r"\d{4}-\d{2}-\d{2}"
+    data_provenance=r"(gisaid)",
+    variant_classification=r"(emerging_haplotype|aa_haplotype)",
+    lineage=r"(h1n1pdm|h3n2|vic)",
+    date=r"\d{4}-\d{2}-\d{2}"
 
 def get_todays_date():
     from datetime import datetime
@@ -13,24 +16,24 @@ run_date = config.get("run_date", get_todays_date())
 if config.get("s3_dst"):
     rule upload_all_models:
         input:
-            expand("results/{lineage}/{geo_resolution}/mlr/{date}_results_s3_upload.done", lineage=config["lineages"], geo_resolution=config["geo_resolutions"], date=run_date),
-            expand("results/{lineage}/{geo_resolution}/mlr/results_s3_upload.done", lineage=config["lineages"], geo_resolution=config["geo_resolutions"])
+            expand("results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/{date}_results_s3_upload.done", data_provenance=config["data_provenances"], variant_classification=config["variant_classifications"], lineage=config["lineages"], geo_resolution=config["geo_resolutions"], date=run_date),
+            expand("results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/results_s3_upload.done", data_provenance=config["data_provenances"], variant_classification=config["variant_classifications"], lineage=config["lineages"], geo_resolution=config["geo_resolutions"])
 else:
     rule all:
         input:
-            expand("plots/{lineage}/{geo_resolution}/ga/ga_by_variant.png", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
-            expand("plots/{lineage}/{geo_resolution}/ga/ga_by_location.png", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
-            expand("plots/{lineage}/{geo_resolution}/freq/freq_by_location.png", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
+            expand("plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/ga/ga_by_variant.png", data_provenance=config["data_provenances"], variant_classification=config["variant_classifications"], lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
+            expand("plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/ga/ga_by_location.png", data_provenance=config["data_provenances"], variant_classification=config["variant_classifications"], lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
+            expand("plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/freq/freq_by_location.png", data_provenance=config["data_provenances"], variant_classification=config["variant_classifications"], lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
 
 rule all_models:
     input:
-        expand("results/{lineage}/{geo_resolution}/mlr/MLR_results.json", lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
+        expand("results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/MLR_results.json", data_provenance=config["data_provenances"], variant_classification=config["variant_classifications"], lineage=config["lineages"], geo_resolution=config["geo_resolutions"]),
 
 rule download_metadata:
     output:
-        "data/{lineage}/metadata.tsv",
+        "data/{data_provenance}/{lineage}/metadata.tsv",
     params:
-        s3_path=lambda wildcards: config["data"][wildcards.lineage]["s3_metadata"]
+        s3_path=lambda wildcards: config["data"][wildcards.data_provenance][wildcards.lineage]["s3_metadata"],
     shell:
         """
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
@@ -38,9 +41,9 @@ rule download_metadata:
 
 rule download_nextclade:
     output:
-        "data/{lineage}/nextclade.tsv",
+        "data/{data_provenance}/{lineage}/nextclade.tsv",
     params:
-        s3_path=lambda wildcards: config["data"][wildcards.lineage]["s3_nextclade"]
+        s3_path=lambda wildcards: config["data"][wildcards.data_provenance][wildcards.lineage]["s3_nextclade"],
     shell:
         """
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
@@ -48,7 +51,7 @@ rule download_nextclade:
 
 rule download_haplotype_definitions:
     output:
-        haplotypes="results/{lineage}/haplotype_definitions.tsv",
+        haplotypes="data/nextstrain/{lineage}/haplotype_definitions.tsv",
     shell:
         """
         curl \
@@ -59,10 +62,10 @@ rule download_haplotype_definitions:
 
 rule metadata_with_nextclade:
     input:
-        metadata="data/{lineage}/metadata.tsv",
-        nextclade="data/{lineage}/nextclade.tsv",
+        metadata="data/{data_provenance}/{lineage}/metadata.tsv",
+        nextclade="data/{data_provenance}/{lineage}/nextclade.tsv",
     output:
-        metadata="data/{lineage}/metadata_with_nextclade.tsv",
+        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade.tsv",
     shell:
         """
         augur merge \
@@ -73,12 +76,12 @@ rule metadata_with_nextclade:
 
 rule filter_data:
     input:
-        metadata="data/{lineage}/metadata_with_nextclade.tsv",
+        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade.tsv",
     output:
-        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade.tsv",
+        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
     params:
-        min_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["min_date"],
-        max_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["max_date"],
+        min_date=lambda wildcards: config["min_date"],
+        max_date=lambda wildcards: config["max_date"],
     shell:
         """
         augur filter \
@@ -89,14 +92,15 @@ rule filter_data:
             --output-metadata {output.metadata}
         """
 
-rule assign_haplotypes:
+rule assign_emerging_haplotypes:
     input:
-        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade.tsv",
-        haplotypes="results/{lineage}/haplotype_definitions.tsv",
+        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
+        haplotypes="data/nextstrain/{lineage}/haplotype_definitions.tsv",
     output:
-        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade_updated.tsv"
+        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_emerging_haplotypes.tsv",
     params:
         variant_column=config["haplotype_variant_column"],
+        haplotype_column_name="emerging_haplotype",
         default_haplotype="other",
     shell:
         """
@@ -104,19 +108,41 @@ rule assign_haplotypes:
             --substitutions {input.metadata} \
             --haplotypes {input.haplotypes} \
             --clade-column {params.variant_column:q} \
+            --haplotype-column-name {params.haplotype_column_name:q} \
             --default-haplotype {params.default_haplotype:q} \
             --output-table {output.metadata}
         """
 
+rule assign_aa_haplotypes:
+    input:
+        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_emerging_haplotypes.tsv",
+    output:
+        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_aa_haplotypes.tsv",
+    params:
+        genes=["HA1"],
+        clade_column=config["haplotype_variant_column"],
+        mutations_column=config["mutations_column"],
+        haplotype_column_name="aa_haplotype",
+    shell:
+        r"""
+        python3 scripts/assign_aa_haplotypes.py \
+            --nextclade {input.metadata:q} \
+            --genes {params.genes:q} \
+            --strip-genes \
+            --clade-column {params.clade_column:q} \
+            --mutations-column {params.mutations_column:q} \
+            --attribute-name {params.haplotype_column_name:q} \
+            --output {output.metadata:q}
+        """
+
 rule clade_seq_counts:
     input:
-        metadata="results/{lineage}/{geo_resolution}/metadata_with_nextclade_updated.tsv",
+        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_aa_haplotypes.tsv",
     output:
-        sequence_counts="results/{lineage}/{geo_resolution}/seq_counts.tsv",
+        sequence_counts="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/seq_counts.tsv",
     params:
         id_column="strain",
         date_column="date",
-        variant_column=config["variant"],
     shell:
         """
         ./scripts/summarize-clade-sequence-counts \
@@ -124,20 +150,20 @@ rule clade_seq_counts:
             --id-column {params.id_column:q} \
             --date-column {params.date_column:q} \
             --location-column {wildcards.geo_resolution:q} \
-            --clade-column {params.variant_column:q} \
+            --clade-column {wildcards.variant_classification:q} \
             --output {output.sequence_counts}
             """
 
 rule prepare_clade_data:
     """Preparing clade counts for analysis"""
     input:
-        sequence_counts = "results/{lineage}/{geo_resolution}/seq_counts.tsv"
+        sequence_counts = "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/seq_counts.tsv"
     output:
-        sequence_counts = "results/{lineage}/{geo_resolution}/prepared_seq_counts.tsv"
+        sequence_counts = "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/prepared_seq_counts.tsv"
     params:
-        min_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["min_date"],
-        location_min_seq=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["location_min_seq"],
-        clade_min_seq=lambda wildcards: config["prepare_data"][wildcards.geo_resolution]["clade_min_seq"],
+        min_date=lambda wildcards: config["min_date"],
+        location_min_seq=lambda wildcards: config["prepare_data"][wildcards.data_provenance][wildcards.variant_classification][wildcards.geo_resolution]["location_min_seq"],
+        clade_min_seq=lambda wildcards: config["prepare_data"][wildcards.data_provenance][wildcards.variant_classification][wildcards.geo_resolution]["clade_min_seq"],
     shell:
         """
         python ./scripts/prepare-data.py \
@@ -150,16 +176,16 @@ rule prepare_clade_data:
 
 rule mlr_model:
     input:
-        counts="results/{lineage}/{geo_resolution}/prepared_seq_counts.tsv",
+        counts="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/prepared_seq_counts.tsv",
         config="config/mlr/{lineage}.yaml",
     output:
-        model="results/{lineage}/{geo_resolution}/mlr/initial_MLR_results.json",
+        model="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/initial_MLR_results.json",
     params:
         data_name="initial_MLR",
-        path="results/{lineage}/{geo_resolution}/mlr/",
-        max_date=lambda wildcards: config["prepare_data"][wildcards.geo_resolution].get("max_date", "0D"),
+        path=subpath(output.model, parent=True),
+        max_date=config["max_date"],
     benchmark:
-        "results/{lineage}/{geo_resolution}/mlr/mlr-model_benchmark.tsv"
+        "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/mlr-model_benchmark.tsv"
     resources:
         mem_mb=3000,
     shell:
@@ -174,29 +200,29 @@ rule mlr_model:
 
 rule add_colors_to_mlr_model:
     input:
-        model="results/{lineage}/{geo_resolution}/mlr/initial_MLR_results.json",
-        auspice_config="results/{lineage}/auspice_config.json",
+        model="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/initial_MLR_results.json",
+        auspice_config="data/nextstrain/{lineage}/auspice_config.json",
+        color_schemes="config/color_schemes.tsv",
     output:
-        model="results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
-    params:
-        coloring_field=config["coloring_field"],
+        model="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/MLR_results.json",
     shell:
         r"""
         python scripts/add_colors_to_model.py \
             --model {input.model:q} \
             --auspice-config {input.auspice_config:q} \
-            --coloring-field {params.coloring_field:q} \
+            --color-schemes {input.color_schemes:q} \
+            --coloring-field {wildcards.variant_classification:q} \
             --output {output.model:q}
         """
 
 rule parse_mlr_json:
     input:
-        model="results/{lineage}/{geo_resolution}/mlr/MLR_results.json",
+        model="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/MLR_results.json",
     output:
-        ga="results/{lineage}/{geo_resolution}/mlr/ga.tsv",
-        freq="results/{lineage}/{geo_resolution}/mlr/freq.tsv",
-        emp="results/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
-        freq_forecast="results/{lineage}/{geo_resolution}/mlr/freq_forecast.tsv",
+        ga="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/ga.tsv",
+        freq="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/freq.tsv",
+        emp="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
+        freq_forecast="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/freq_forecast.tsv",
     params:
         version="MLR",
     shell:
@@ -214,7 +240,7 @@ rule get_pivot:
     input:
         config="config/mlr/{lineage}.yaml"
     output:
-        "results/{lineage}/{geo_resolution}/pivot.txt"
+        "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/pivot.txt"
     shell:
         """
         python3 scripts/get_pivot.py \
@@ -224,7 +250,7 @@ rule get_pivot:
 
 rule download_auspice_config_json:
     output:
-        config="results/{lineage}/auspice_config.json",
+        config="data/nextstrain/{lineage}/auspice_config.json",
     shell:
         """
         curl \
@@ -235,14 +261,12 @@ rule download_auspice_config_json:
 
 rule plot_freq:
     input:
-        freq_data="results/{lineage}/{geo_resolution}/mlr/freq.tsv",
-        raw_data="results/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
+        freq_data="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/freq.tsv",
+        raw_data="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
         color_scheme="config/color_schemes.tsv",
-        auspice_config="results/{lineage}/auspice_config.json"
+        auspice_config="data/nextstrain/{lineage}/auspice_config.json",
     output:
-        variant="plots/{lineage}/{geo_resolution}/freq/freq_by_location.png"
-    params:
-        coloring_field=config["coloring_field"],
+        variant="plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/freq/freq_by_location.png",
     shell:
         """
         python3 ./scripts/plot-freq.py \
@@ -250,21 +274,19 @@ rule plot_freq:
             --input_raw {input.raw_data} \
             --colors {input.color_scheme} \
             --auspice-config {input.auspice_config} \
-            --coloring-field {params.coloring_field} \
+            --coloring-field {wildcards.variant_classification} \
             --output {output.variant}
         """
 
 rule plot_ga:
     input:
-        ga="results/{lineage}/{geo_resolution}/mlr/ga.tsv",
+        ga="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/ga.tsv",
         color_scheme="config/color_schemes.tsv",
-        pivot="results/{lineage}/{geo_resolution}/pivot.txt",
-        auspice_config="results/{lineage}/auspice_config.json"
+        pivot="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/pivot.txt",
+        auspice_config="data/nextstrain/{lineage}/auspice_config.json"
     output:
-        variant="plots/{lineage}/{geo_resolution}/ga/ga_by_variant.png",
-        location="plots/{lineage}/{geo_resolution}/ga/ga_by_location.png",
-    params:
-        coloring_field=config["coloring_field"],
+        variant="plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/ga/ga_by_variant.png",
+        location="plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/ga/ga_by_location.png",
     shell:
         """
         python3 ./scripts/plot-ga.py \
@@ -275,7 +297,7 @@ rule plot_ga:
             --out_location {output.location} \
             --pivot {input.pivot} \
             --auspice-config {input.auspice_config} \
-            --coloring-field {params.coloring_field}
+            --coloring-field {wildcards.variant_classification}
         """
 
 if config.get("s3_dst"):
