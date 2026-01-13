@@ -154,10 +154,25 @@ rule clade_seq_counts:
             --output {output.sequence_counts}
             """
 
+rule collapse_haplotype_counts:
+    input:
+        sequence_counts = "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/seq_counts.tsv"
+    output:
+        sequence_counts = "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/collapsed_seq_counts.tsv"
+    params:
+        haplotype_min_seq=lambda wildcards: config["prepare_data"][wildcards.data_provenance][wildcards.variant_classification][wildcards.geo_resolution]["clade_min_seq"],
+    shell:
+        """
+        python ./scripts/collapse_haplotype_counts.py \
+            --seq-counts {input.sequence_counts} \
+            --haplotype-min-seq {params.haplotype_min_seq} \
+            --output-seq-counts {output.sequence_counts}
+        """
+
 rule prepare_clade_data:
     """Preparing clade counts for analysis"""
     input:
-        sequence_counts = "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/seq_counts.tsv"
+        sequence_counts = "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/collapsed_seq_counts.tsv"
     output:
         sequence_counts = "results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/prepared_seq_counts.tsv"
     params:
