@@ -21,8 +21,8 @@ jobs:
           --aws-batch \
           --detach \
           --no-download \
-          --cpus 8 \
-          --memory 16GiB \
+          --cpus 16 \
+          --memory 32GiB \
           --env AWS_DEFAULT_REGION \
           --env GITHUB_RUN_ID \
           . \
