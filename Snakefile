@@ -282,13 +282,15 @@ rule plot_freq:
         auspice_config="data/nextstrain/{lineage}/auspice_config.json",
     output:
         variant="plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/freq/freq_by_location.png",
+    params:
+        auspice_config_arg=lambda wildcards, input: f"--auspice-config {input.auspice_config}" if wildcards.variant_classification == "emerging_haplotype" else "",
     shell:
         """
         python3 ./scripts/plot-freq.py \
             --input_freq {input.freq_data} \
             --input_raw {input.raw_data} \
             --colors {input.color_scheme} \
-            --auspice-config {input.auspice_config} \
+            {params.auspice_config_arg} \
             --coloring-field {wildcards.variant_classification} \
             --output {output.variant}
         """
@@ -302,6 +304,8 @@ rule plot_ga:
     output:
         variant="plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/ga/ga_by_variant.png",
         location="plots/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/ga/ga_by_location.png",
+    params:
+        auspice_config_arg=lambda wildcards, input: f"--auspice-config {input.auspice_config}" if wildcards.variant_classification == "emerging_haplotype" else "",
     shell:
         """
         python3 ./scripts/plot-ga.py \
@@ -311,7 +315,7 @@ rule plot_ga:
             --out_variant {output.variant} \
             --out_location {output.location} \
             --pivot {input.pivot} \
-            --auspice-config {input.auspice_config} \
+            {params.auspice_config_arg} \
             --coloring-field {wildcards.variant_classification}
         """
 
