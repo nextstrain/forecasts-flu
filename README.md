@@ -18,7 +18,7 @@ This use is allowable under the [GISAID Terms of Use](https://www.gisaid.org/reg
 
     ```
     docker login ghcr.io -u <GitHub username> -p <access token>
-    docker pull --quiet ghcr.io/blab/flu-geo-fitness:latest
+    docker pull --quiet ghcr.io/blab/flu-mlr-fitness:latest
     ```
 
 ## Configure the workflow
@@ -37,7 +37,7 @@ Colors per haplotype are also defined in the corresponding Auspice config JSONs 
 By default, the workflow will run MLR models for all builds defined in `config/defaults.yaml` and plot the inferred frequencies and growth advantages.
 
 ```
-nextstrain build --docker --image=ghcr.io/blab/flu-geo-fitness:latest .
+nextstrain build --docker --image=ghcr.io/blab/flu-mlr-fitness:latest .
 ```
 
 Alternately, you can run the workflow through the creation of MLR model JSONs and upload these JSONs to S3 by specifying an additional configuration file.
