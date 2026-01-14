@@ -6,6 +6,11 @@ This changelog is intended for _humans_ and follows many of the principles from 
 Changes for this project _do not_ currently follow the [Semantic Versioning rules](https://semver.org/spec/v2.0.0.html).
 Instead, changes appear below grouped by the date they were added to the workflow.
 
+# 13 January 2025
+
+ - Collapse low-count haplotype counts into their parental clades instead of the "other" group. See [#30](https://github.com/nextstrain/forecasts-flu/pull/30) for details.
+ - Fix access to dated model results produced before we added support for amino acid haplotypes. See [#28](https://github.com/nextstrain/forecasts-flu/pull/28) for details.
+
 # 23 December 2025
 
  - Add frequency and fitness estimates for amino acid haplotypes for each subtype and geographic resolution. See [#26](https://github.com/nextstrain/forecasts-flu/pull/26) for details.
