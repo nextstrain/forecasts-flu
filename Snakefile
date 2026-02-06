@@ -277,6 +277,7 @@ rule download_auspice_config_json:
 rule plot_freq:
     input:
         freq_data="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/freq.tsv",
+        forecast_data="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/freq_forecast.tsv",
         raw_data="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/raw_freq.tsv",
         color_scheme="config/color_schemes.tsv",
         auspice_config="data/nextstrain/{lineage}/auspice_config.json",
@@ -289,6 +290,7 @@ rule plot_freq:
         python3 ./scripts/plot-freq.py \
             --input_freq {input.freq_data} \
             --input_raw {input.raw_data} \
+            --input_forecast {input.forecast_data} \
             --colors {input.color_scheme} \
             {params.auspice_config_arg} \
             --coloring-field {wildcards.variant_classification} \

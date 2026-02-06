@@ -16,9 +16,16 @@ mpl.rcParams["ytick.labelsize"] = 10
 mpl.rcParams["legend.fontsize"] = 10
 
 
-def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_lst=None, var_lst=None, auspice_config_file=None, coloring_field=None):
-    df = pd.read_csv(df_file, sep="\t", parse_dates=["date"])
+def plot_freq(df_file, raw_file, forecast_file, color_file, output_plot, cases_file=None, loc_lst=None, var_lst=None, auspice_config_file=None, coloring_field=None):
+    retrospective = pd.read_csv(df_file, sep="\t", parse_dates=["date"])
+    forecast = pd.read_csv(forecast_file, sep="\t", parse_dates=["date"])
     raw = pd.read_csv(raw_file, sep="\t", parse_dates=["date"])
+
+    # Concatenate retrospective and forecast frequencies into one data frame.
+    df = pd.concat([retrospective, forecast])
+
+    # The last date of the retrospective data is the forecast date.
+    forecast_date = retrospective["date"].max()
 
     # Add pseudo-count to zero-valued HDPIs to enable proper plotting on the
     # logit scale.
@@ -96,10 +103,18 @@ def plot_freq(df_file, raw_file, color_file, output_plot, cases_file=None, loc_l
         rotation=45
     )
 
+    fig.refline(
+        x=forecast_date,
+        color="#000000",
+        linestyle="dashed",
+        zorder=-10,
+    )
+
     # Plot the CIs
     def plot_with_ci(data, **kwargs):
         sns.lineplot(data=data, x="date", y="median", linewidth=2, **kwargs)
         plt.fill_between(data["date"], data["HDI_95_lower"], data["HDI_95_upper"], alpha=0.4, color=kwargs["color"])
+
     fig.map_dataframe(plot_with_ci)
 
     # Plot the raw_freq
@@ -172,6 +187,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot Freq plots by location and variant.")
     parser.add_argument("-i", "--input_freq", type=str, required=True, help="Parsed MLR site freq TSV file (<model>_freq.tsv)")
     parser.add_argument("-r", "--input_raw", type=str, required=True, help="Path to weekly raw sequence TSV file")
+    parser.add_argument("-f", "--input_forecast", type=str, required=True, help="Parsed MLR site forecast freq TSV file (<model>_forecast.tsv)")
     parser.add_argument("--input_cases", help="Path to case counts per location in a TSV file")
     parser.add_argument("-c", "--colors", type=str, required=True, help="Path to Nextstrain color scheme (configs/color_schemes.tsv)]")
     parser.add_argument("--auspice-config", help="Auspice config JSON with custom colorings for clades defined in a scale")
@@ -180,4 +196,4 @@ if __name__ == "__main__":
     parser.add_argument("-vl", "--variant_list", required=False, help="Variant list TXT file to include in frequency plot")
     parser.add_argument("-o", "--output", type=str, required=True, help="Site frequency by location plot PDF")
     args = parser.parse_args()
-    plot_freq(args.input_freq, args.input_raw, args.colors, args.output, args.input_cases, args.location_list, args.variant_list, args.auspice_config, args.coloring_field)
+    plot_freq(args.input_freq, args.input_raw, args.input_forecast, args.colors, args.output, args.input_cases, args.location_list, args.variant_list, args.auspice_config, args.coloring_field)
