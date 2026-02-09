@@ -33,7 +33,7 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, output
 
         # Parse freq from MLR or Latent model
         for record in data["data"]:
-            if record["site"] == "freq" and record["ps"] in ["median", "HDI_95_upper", "HDI_95_lower"]:
+            if record["site"] == "freq" and record["ps"] in ["mean", "median", "HDI_95_upper", "HDI_95_lower"]:
                 key = (record["location"], record["variant"], record["date"])
                 if key not in grouped_freq:
                     grouped_freq[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}
@@ -48,7 +48,7 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, output
             print("Parsing forecast freq from model results.")
             grouped_freq_forecast = {}
             for record in data["data"]:
-                if record["site"] == "freq_forecast" and record["ps"] in ["median", "HDI_95_upper", "HDI_95_lower"]:
+                if record["site"] == "freq_forecast" and record["ps"] in ["mean", "median", "HDI_95_upper", "HDI_95_lower"]:
                     key = (record["location"], record["variant"], record["date"])
                     if key not in grouped_freq_forecast:
                         grouped_freq_forecast[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}
@@ -74,7 +74,7 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, output
         if model_version == "MLR":
             print("Parsing ga (growth advantage) from MLR model results.")
             for record in data["data"]:
-                if record["site"] == "ga" and record["ps"] in ["median", "HDI_95_upper", "HDI_95_lower"]:
+                if record["site"] == "ga" and record["ps"] in ["mean", "median", "HDI_95_upper", "HDI_95_lower"]:
                     key = (record["location"], record["variant"])
                     if key not in grouped_ga:
                         grouped_ga[key] = {"location": record["location"], "variant": record["variant"]}
@@ -88,12 +88,12 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, output
             print("Parsing delta (relative fitness) from Latent model results.")
             print("Parsing ga (growth advantage) from Latent model results.")
             for record in data["data"]:
-                if record["site"] == "delta" and record["ps"] in ["median", "HDI_95_upper", "HDI_95_lower"]:
+                if record["site"] == "delta" and record["ps"] in ["mean", "median", "HDI_95_upper", "HDI_95_lower"]:
                     key = (record["location"], record["variant"], record["date"])
                     if key not in grouped_rf:
                         grouped_rf[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}
                     grouped_rf[key][record["ps"]] = record["value"]
-                if record["site"] == "ga" and record["ps"] in ["median", "HDI_95_upper", "HDI_95_lower"]:
+                if record["site"] == "ga" and record["ps"] in ["mean", "median", "HDI_95_upper", "HDI_95_lower"]:
                     key = (record["location"], record["variant"], record["date"])
                     if key not in grouped_ga:
                         grouped_ga[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}

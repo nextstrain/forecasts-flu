@@ -11,6 +11,7 @@ settings:
   load: false # Load old model?
   export_json: true  # Export model results as json
   ps: [0.5, 0.8, 0.95] # HPDI intervals to be exported
+  ps_point_estimator: "mean"
 
 model:
   forecast_L: 52

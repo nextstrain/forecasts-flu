@@ -6,7 +6,11 @@ This changelog is intended for _humans_ and follows many of the principles from 
 Changes for this project _do not_ currently follow the [Semantic Versioning rules](https://semver.org/spec/v2.0.0.html).
 Instead, changes appear below grouped by the date they were added to the workflow.
 
-# 13 January 2025
+# 6 February 2026
+
+ - Use mean instead of median as point estimator for frequency and GA values. See [#38](https://github.com/nextstrain/forecasts-flu/pull/38) for details.
+
+# 13 January 2026
 
  - Collapse low-count haplotype counts into their parental clades instead of the "other" group. See [#30](https://github.com/nextstrain/forecasts-flu/pull/30) for details.
  - Fix access to dated model results produced before we added support for amino acid haplotypes. See [#28](https://github.com/nextstrain/forecasts-flu/pull/28) for details.

@@ -333,7 +333,7 @@ def make_raw_freq_tidy(data, location):
     return {"metadata": metadata, "data": entries}
 
 # export results MLR model (with GA)
-def export_results_mlr(multi_posterior, ps, path, data_name, hier, ga_inclusion_threshold, variant_location_counts):
+def export_results_mlr(multi_posterior, ps, path, data_name, hier, ga_inclusion_threshold, variant_location_counts, ps_point_estimator):
     EXPORT_SITES = ["freq", "ga", "freq_forecast"]
     EXPORT_DATED = [True, False, True]
     EXPORT_FORECASTS = [False, False, True]
@@ -383,7 +383,8 @@ def export_results_mlr(multi_posterior, ps, path, data_name, hier, ga_inclusion_
                     [False],
                     [False],
                     ps,
-                    location
+                    location,
+                    ps_point_estimator=ps_point_estimator,
                 )
             )
         else:
@@ -395,6 +396,7 @@ def export_results_mlr(multi_posterior, ps, path, data_name, hier, ga_inclusion_
                 EXPORT_FORECASTS,
                 ps,
                 location,
+                ps_point_estimator=ps_point_estimator,
             )
 
             # Apply filtering on ga values
@@ -637,8 +639,11 @@ if __name__ == "__main__":
         ps = parse_with_default(
             config.config["settings"], "ps", dflt=[0.5, 0.8, 0.95]
         )
+        ps_point_estimator = parse_with_default(
+            config.config["settings"], "ps_point_estimator", dflt="median"
+        )
         data_name = args.data_name or config.config["data"]["name"]
         if config.config["model"]["version"] == "MLR":
-            export_results_mlr(multi_posterior, ps, export_path, data_name, hier, location_ga_inclusion_threshold, variant_location_counts)
+            export_results_mlr(multi_posterior, ps, export_path, data_name, hier, location_ga_inclusion_threshold, variant_location_counts, ps_point_estimator)
         elif config.config["model"]["version"] == "Latent":
             export_results_latent(multi_posterior, ps, export_path, data_name, hier)
