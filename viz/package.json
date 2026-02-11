@@ -6,7 +6,7 @@
     "serve": "npx http-server"
   },
   "dependencies": {
-    "@nextstrain/evofr-viz": "file:nextstrain-evofr-viz-0.1.0.tgz",
+    "@nextstrain/evofr-viz": "file:nextstrain-evofr-viz-0.2.0.tgz",
     "esbuild": "^0.25.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
