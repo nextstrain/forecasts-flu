@@ -31,17 +31,18 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, output
         grouped_freq = {}
         grouped_raw_freq = {}
 
-        # Parse freq from MLR or Latent model
-        for record in data["data"]:
-            if record["site"] == "freq" and record["ps"] in ["mean", "median", "HDI_95_upper", "HDI_95_lower"]:
-                key = (record["location"], record["variant"], record["date"])
-                if key not in grouped_freq:
-                    grouped_freq[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}
-                grouped_freq[key][record["ps"]] = record["value"]
+        if output_freq:
+            # Parse freq from MLR or Latent model
+            for record in data["data"]:
+                if record["site"] == "freq" and record["ps"] in ["mean", "median", "HDI_95_upper", "HDI_95_lower"]:
+                    key = (record["location"], record["variant"], record["date"])
+                    if key not in grouped_freq:
+                        grouped_freq[key] = {"location": record["location"], "date": record["date"], "variant": record["variant"]}
+                    grouped_freq[key][record["ps"]] = record["value"]
 
-        # Write output <model>/freq.tsv
-        print("Parsing freq from model results.")
-        write_outfile(output_freq, grouped_freq)
+            # Write output <model>/freq.tsv
+            print("Parsing freq from model results.")
+            write_outfile(output_freq, grouped_freq)
 
         # Parse forecast freq from MLR model
         if output_freq_forecast:
@@ -108,11 +109,11 @@ def parse_json(input_file, output_ga, output_rf, output_freq, output_raw, output
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter and parse MLR-model JSON data")
     parser.add_argument("--input", required=True, help="Path to the MLR output JSON file (<model>_results.json)")
-    parser.add_argument("--outga", required=True, help="Path to filtered and parsed GA (growth advantage) TSV file (mlr/ga.tsv)")
-    parser.add_argument("--outrf", required=False, help="Path to filtered and parsed RF (relative fitness) TSV file (latent/rf.tsv)")
-    parser.add_argument("--outfreq", required=True, help="Path to filtered and parsed freq TSV file (<model>/freq.tsv)")
-    parser.add_argument("--outraw", required=False, help="Path to empirical freq TSV file (raw_freq.tsv)")
+    parser.add_argument("--outga", help="Path to filtered and parsed GA (growth advantage) TSV file (mlr/ga.tsv)")
+    parser.add_argument("--outrf", help="Path to filtered and parsed RF (relative fitness) TSV file (latent/rf.tsv)")
+    parser.add_argument("--outfreq", help="Path to filtered and parsed freq TSV file (<model>/freq.tsv)")
+    parser.add_argument("--outraw", help="Path to empirical freq TSV file (raw_freq.tsv)")
     parser.add_argument("--outfreqforecast", help="Path to forecast frequencies TSV file")
-    parser.add_argument("--model", required=True, help="Model version ['Latent', 'MLR']")
+    parser.add_argument("--model", help="Model version ['Latent', 'MLR']")
     args = parser.parse_args()
     parse_json(args.input, args.outga, args.outrf, args.outfreq, args.outraw, args.outfreqforecast, args.model)
