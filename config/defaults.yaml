@@ -41,10 +41,10 @@ prepare_data:
     aa_haplotype:
       country:
         location_min_seq: 100
-        clade_min_seq: 30
+        clade_min_seq: 50
       region:
         location_min_seq: 100
-        clade_min_seq: 30
+        clade_min_seq: 50
 
 haplotype_variant_column: "clade"
 mutations_column: "founderMuts['clade'].aaSubstitutions"
