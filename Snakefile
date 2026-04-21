@@ -39,17 +39,6 @@ rule download_metadata:
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
         """
 
-rule download_haplotype_definitions:
-    output:
-        haplotypes="data/nextstrain/{lineage}/haplotype_definitions.tsv",
-    shell:
-        """
-        curl \
-            -o {output.haplotypes} \
-            -L \
-            'https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/config/{wildcards.lineage}/ha/emerging_haplotypes.tsv'
-        """
-
 rule filter_data:
     input:
         metadata="data/{data_provenance}/{lineage}/metadata.tsv",
@@ -68,52 +57,9 @@ rule filter_data:
             --output-metadata {output.metadata}
         """
 
-rule assign_emerging_haplotypes:
-    input:
-        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
-        haplotypes="data/nextstrain/{lineage}/haplotype_definitions.tsv",
-    output:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_emerging_haplotypes.tsv",
-    params:
-        variant_column=config["haplotype_variant_column"],
-        haplotype_column_name="emerging_haplotype",
-        default_haplotype="other",
-    shell:
-        """
-        python scripts/assign_haplotypes.py \
-            --substitutions {input.metadata} \
-            --haplotypes {input.haplotypes} \
-            --clade-column {params.variant_column:q} \
-            --haplotype-column-name {params.haplotype_column_name:q} \
-            --default-haplotype {params.default_haplotype:q} \
-            --output-table {output.metadata}
-        """
-
-rule assign_aa_haplotypes:
-    input:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_emerging_haplotypes.tsv",
-    output:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_aa_haplotypes.tsv",
-    params:
-        genes=["HA1"],
-        clade_column=config["haplotype_variant_column"],
-        mutations_column=config["mutations_column"],
-        haplotype_column_name="aa_haplotype",
-    shell:
-        r"""
-        python3 scripts/assign_aa_haplotypes.py \
-            --nextclade {input.metadata:q} \
-            --genes {params.genes:q} \
-            --strip-genes \
-            --clade-column {params.clade_column:q} \
-            --mutations-column {params.mutations_column:q} \
-            --attribute-name {params.haplotype_column_name:q} \
-            --output {output.metadata:q}
-        """
-
 rule clade_seq_counts:
     input:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_aa_haplotypes.tsv",
+        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
     output:
         sequence_counts="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/seq_counts.tsv",
     params:
