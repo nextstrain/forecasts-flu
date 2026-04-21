@@ -39,16 +39,6 @@ rule download_metadata:
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
         """
 
-rule download_nextclade:
-    output:
-        "data/{data_provenance}/{lineage}/nextclade.tsv",
-    params:
-        s3_path=lambda wildcards: config["data"][wildcards.data_provenance][wildcards.lineage]["s3_nextclade"],
-    shell:
-        """
-        aws s3 cp {params.s3_path} - | xz -c -d > {output}
-        """
-
 rule download_haplotype_definitions:
     output:
         haplotypes="data/nextstrain/{lineage}/haplotype_definitions.tsv",
@@ -60,23 +50,9 @@ rule download_haplotype_definitions:
             'https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/config/{wildcards.lineage}/ha/emerging_haplotypes.tsv'
         """
 
-rule metadata_with_nextclade:
-    input:
-        metadata="data/{data_provenance}/{lineage}/metadata.tsv",
-        nextclade="data/{data_provenance}/{lineage}/nextclade.tsv",
-    output:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade.tsv",
-    shell:
-        """
-        augur merge \
-            --metadata metadata={input.metadata} nextclade={input.nextclade} \
-            --metadata-id-columns strain seqName \
-            --output-metadata {output.metadata}
-        """
-
 rule filter_data:
     input:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade.tsv",
+        metadata="data/{data_provenance}/{lineage}/metadata.tsv",
     output:
         metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
     params:
@@ -86,7 +62,7 @@ rule filter_data:
         """
         augur filter \
             --metadata {input.metadata} \
-            --query "(date != '?') & (country != '?') & (region != '?') & (subclade != '') & (\`qc.overallStatus\` == 'good')" \
+            --query "(date != '?') & (country != '?') & (region != '?') & (subclade_nextclade_ha != '') & (\`qc.overallStatus\` == 'good')" \
             --min-date {params.min_date:q} \
             --max-date {params.max_date:q} \
             --output-metadata {output.metadata}
