@@ -57,6 +57,18 @@ rule filter_data:
             --output-metadata {output.metadata}
         """
 
+def _get_clade_column(wildcards):
+    """
+    Map variant_classification to haplotype column names.
+    The returned column names should match the columns available in the metadata,
+    which should defined in the seasonal-flu ingest config.
+    """
+    if wildcards.variant_classification == "emerging_haplotype":
+        return "emerging_haplotype_ha"
+    elif wildcards.variant_classification == "aa_haplotype":
+        return "subclade_haplotype_ha"
+    raise Exception(f"Encountered unsupported variant_classification {wildcards.variant_classification!r}")
+
 rule clade_seq_counts:
     input:
         metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
@@ -65,6 +77,7 @@ rule clade_seq_counts:
     params:
         id_column="strain",
         date_column="date",
+        clade_column=_get_clade_column,
     shell:
         """
         ./scripts/summarize-clade-sequence-counts \
@@ -72,7 +85,7 @@ rule clade_seq_counts:
             --id-column {params.id_column:q} \
             --date-column {params.date_column:q} \
             --location-column {wildcards.geo_resolution:q} \
-            --clade-column {wildcards.variant_classification:q} \
+            --clade-column {params.clade_column:q} \
             --output {output.sequence_counts}
             """
 
