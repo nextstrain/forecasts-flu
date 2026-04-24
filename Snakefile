@@ -51,7 +51,7 @@ rule filter_data:
         """
         augur filter \
             --metadata {input.metadata} \
-            --query "(date != '?') & (country != '?') & (region != '?') & (subclade_nextclade_ha != '') & (\`qc.overallStatus\` == 'good')" \
+            --query "(date != '?') & (country != '?') & (region != '?') & (subclade_nextclade_ha != '') & (\`qc.overallStatus_ha\` == 'good')" \
             --min-date {params.min_date:q} \
             --max-date {params.max_date:q} \
             --output-metadata {output.metadata}
