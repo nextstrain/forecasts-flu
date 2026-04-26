@@ -7,35 +7,54 @@
 * An environment with nodeJS, e.g. use conda.
 * Install dependencies via `npm ci`
 
-### Development mode
-
-```
-npm run start
-```
-
-This will use [esbuild](https://esbuild.github.io) to bundle the JS code and serve the main `index.html` page.
-The JS code will automatically updae when changes are made, but you will still need to reload the page to pick them up (we can implement [live reloading](https://esbuild.github.io/api/#live-reload) to improve this if needed).
-
-### Build & serve
+### Build & preview
 
 ```
 npm run build
-npm run serve
+npm run preview
 ```
 
-### GitHub pages
+`build` produces `dist/index.html` plus hashed assets under `dist/assets/`.
 
-### How to update the underlying viz library
+## Deploy to GitHub Pages
 
-In the [nextstrain/forecasts-viz](https://github.com/nextstrain/forecasts-viz) repo generate a tarball and move it into this directory by following [these instructions](https://github.com/nextstrain/forecasts-viz?tab=readme-ov-file#how-to-import-the-library).
+The GitHub Pages workflow at `.github/workflows/deploy-viz-app.yaml` builds and uploads `viz/dist/`.
 
 
-## Where are things defined?
+### Development
 
-`./index.html` is the entrypoint. Currently it defines a page H1 title and an (empty) element where all the visualisations are rendered.
+To develop only the forecasts-ncov code whilst continuing to use the library
+from the tarball, `npm run dev` runs [Vite](https://vite.dev) with React Fast Refresh so edits to JSX in `src/main.jsx` (or its imports) update the running app without a full reload.
 
-`./src/main.jsx` is React code which renders the panels into the page; this is also where the config is defined which controls which panels to render. (All of this is changeable, and one day we can hopefully drop React entirely.)
+To simultaneously develop the viz library alongside this app, ensure the viz components live in the sibling repo
+[nextstrain/forecasts-viz](https://github.com/nextstrain/forecasts-viz),
+which is checked out at `../forecasts-viz`. Then run:
 
-The underlying model JSONs are fetched from S3 via `https://data.nextstrain.org/` URLs, as defined in `./src/main.jsx`. We can add the option to serve local JSONs as needed.
+```sh
+LOCAL_LIB=1 npm run dev
+```
 
-`nextstrain-evofr-viz-*.tgz` is our [nextstrain/forecasts-viz](https://github.com/nextstrain/forecasts-viz) library (see above)
+`vite.config.js` then redirects `@nextstrain/evofr-viz` imports to
+`../../forecasts-viz/src/lib/`, so saving a file in the library updates
+the running app immediately. No `npm pack` round-trip.
+
+When you're done developing the library and want to bump the version
+that this app ships with:
+
+1. In `forecasts-viz`, run `npm pack` to produce a fresh tarball.
+2. Move the tarball into this directory, replacing the existing one.
+3. Run `npm install` here to refresh the lockfile.
+
+## Where things are defined
+
+`./index.html` is the entrypoint. It loads `./src/main.jsx`, which
+renders the panels and contains the config that controls which panels
+to render. (One day we can hopefully drop React entirely.)
+
+The underlying model JSONs are fetched from S3 via
+`https://data.nextstrain.org/` URLs, as defined in `./src/main.jsx`.
+We can add the option to serve local JSONs as needed.
+
+`nextstrain-evofr-viz-*.tgz` is our
+[nextstrain/forecasts-viz](https://github.com/nextstrain/forecasts-viz)
+library packed into a tarball.
