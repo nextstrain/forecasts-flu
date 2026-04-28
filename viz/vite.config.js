@@ -12,7 +12,7 @@ const localLibRoot = path.resolve(__dirname, '../../forecasts-viz');
 
 const localLibAlias = useLocalLib ? {
   '@nextstrain/evofr-viz/dist/index.css': path.resolve(localLibRoot, 'src/lib/styles/styles.css'),
-  '@nextstrain/evofr-viz': path.resolve(localLibRoot, 'src/lib/index.js'),
+  '@nextstrain/evofr-viz': path.resolve(localLibRoot, 'src/lib/index.ts'),
 } : {};
 
 export default defineConfig({

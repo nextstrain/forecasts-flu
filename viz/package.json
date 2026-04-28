@@ -4,15 +4,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "typecheck": "tsc",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@nextstrain/evofr-viz": "file:nextstrain-evofr-viz-0.2.0.tgz",
+    "@nextstrain/evofr-viz": "file:nextstrain-evofr-viz-0.3.0.tgz",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^6.0.3",
     "vite": "^5.4.0"
   }
 }
