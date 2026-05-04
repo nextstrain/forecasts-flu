@@ -53,29 +53,7 @@ function DisplayModel(
           params={{ preset: 'growthAdvantage' }}
         />
       </div>
-      
-      <h2>{modelName} population-relative growth advantage for {TABS[tabSelected]}</h2>
-      <p>
-        Updated {modelData?.modelData?.get('updated') || 'loading'}.
-      </p>
-      <div className="panelDisplay">
-        <PanelDisplay
-          data={modelData}
-          params={{ preset: 'relativeGA' }}
-        />
-      </div>
-      
-      <h2>{modelName} population-relative growth advantage vs frequency for {TABS[tabSelected]}</h2>
-      <p>
-        Updated {modelData?.modelData?.get('updated') || 'loading'}.
-      </p>
-      <div className="panelDisplay">
-        <PanelDisplay
-          data={modelData}
-          params={{ preset: 'freqGA' }}
-        />
-      </div>
-      
+
     </>
   );
 }

@@ -12,9 +12,7 @@ const sites: DatasetConfig['sites'] = {
     smoothed_site: 'smoothed_raw_freq',
     smoothed_name: 'Smoothed Raw Data',
   },
-  // Following enables relative GA calculations, but I haven't validated
-  // these yet so don't use in production
-  relativeGA: {enable: true},
+  relativeGA: {enable: false},
 };
 
 export function createConfig(tabSelected: string, modelDate: string, variantClassification: string): DatasetConfig {
