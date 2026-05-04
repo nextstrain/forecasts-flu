@@ -22,20 +22,6 @@ export function createConfig(tabSelected: string, modelDate: string, variantClas
     sites: { ...sites },
   }
   
-  /* TODO XXX - following should be in the JSON, but is here to show the capability */
-  if (tabSelected === "h1n1pdm/country") {
-    config.locationHierarchy = new Map([
-      [
-        'Region',
-        new Map([
-          ['Oceania', ['Australia']],
-          ['North America', ['Canada', 'USA']],
-          ['Europe', ['Denmark', 'France', 'Germany', 'Italy', 'Netherlands', 'Norway', 'Portugal', 'Spain', 'United Kingdom']],
-        ])
-      ]
-    ]);
-  }
-  
   return config;
 }
 
