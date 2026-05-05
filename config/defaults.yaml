@@ -2,13 +2,10 @@ data:
   gisaid:
     h3n2:
       s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/metadata.tsv.xz"
-      s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h3n2/ha/nextclade.tsv.xz"
     h1n1pdm:
       s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/metadata.tsv.xz"
-      s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/h1n1pdm/ha/nextclade.tsv.xz"
     vic:
       s3_metadata: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/metadata.tsv.xz"
-      s3_nextclade: "s3://nextstrain-data-private/files/workflows/seasonal-flu/vic/ha/nextclade.tsv.xz"
 
 data_provenances:
   - gisaid
@@ -46,5 +43,3 @@ prepare_data:
         location_min_seq: 100
         clade_min_seq: 50
 
-haplotype_variant_column: "clade"
-mutations_column: "founderMuts['clade'].aaSubstitutions"

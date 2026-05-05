@@ -39,44 +39,9 @@ rule download_metadata:
         aws s3 cp {params.s3_path} - | xz -c -d > {output}
         """
 
-rule download_nextclade:
-    output:
-        "data/{data_provenance}/{lineage}/nextclade.tsv",
-    params:
-        s3_path=lambda wildcards: config["data"][wildcards.data_provenance][wildcards.lineage]["s3_nextclade"],
-    shell:
-        """
-        aws s3 cp {params.s3_path} - | xz -c -d > {output}
-        """
-
-rule download_haplotype_definitions:
-    output:
-        haplotypes="data/nextstrain/{lineage}/haplotype_definitions.tsv",
-    shell:
-        """
-        curl \
-            -o {output.haplotypes} \
-            -L \
-            'https://raw.githubusercontent.com/nextstrain/seasonal-flu/refs/heads/master/config/{wildcards.lineage}/ha/emerging_haplotypes.tsv'
-        """
-
-rule metadata_with_nextclade:
-    input:
-        metadata="data/{data_provenance}/{lineage}/metadata.tsv",
-        nextclade="data/{data_provenance}/{lineage}/nextclade.tsv",
-    output:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade.tsv",
-    shell:
-        """
-        augur merge \
-            --metadata metadata={input.metadata} nextclade={input.nextclade} \
-            --metadata-id-columns strain seqName \
-            --output-metadata {output.metadata}
-        """
-
 rule filter_data:
     input:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade.tsv",
+        metadata="data/{data_provenance}/{lineage}/metadata.tsv",
     output:
         metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
     params:
@@ -86,63 +51,33 @@ rule filter_data:
         """
         augur filter \
             --metadata {input.metadata} \
-            --query "(date != '?') & (country != '?') & (region != '?') & (subclade != '') & (\`qc.overallStatus\` == 'good')" \
+            --query "(date != '?') & (country != '?') & (region != '?') & (subclade_nextclade_ha != '') & (\`qc.overallStatus_ha\` == 'good')" \
             --min-date {params.min_date:q} \
             --max-date {params.max_date:q} \
             --output-metadata {output.metadata}
         """
 
-rule assign_emerging_haplotypes:
-    input:
-        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
-        haplotypes="data/nextstrain/{lineage}/haplotype_definitions.tsv",
-    output:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_emerging_haplotypes.tsv",
-    params:
-        variant_column=config["haplotype_variant_column"],
-        haplotype_column_name="emerging_haplotype",
-        default_haplotype="other",
-    shell:
-        """
-        python scripts/assign_haplotypes.py \
-            --substitutions {input.metadata} \
-            --haplotypes {input.haplotypes} \
-            --clade-column {params.variant_column:q} \
-            --haplotype-column-name {params.haplotype_column_name:q} \
-            --default-haplotype {params.default_haplotype:q} \
-            --output-table {output.metadata}
-        """
-
-rule assign_aa_haplotypes:
-    input:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_emerging_haplotypes.tsv",
-    output:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_aa_haplotypes.tsv",
-    params:
-        genes=["HA1"],
-        clade_column=config["haplotype_variant_column"],
-        mutations_column=config["mutations_column"],
-        haplotype_column_name="aa_haplotype",
-    shell:
-        r"""
-        python3 scripts/assign_aa_haplotypes.py \
-            --nextclade {input.metadata:q} \
-            --genes {params.genes:q} \
-            --strip-genes \
-            --clade-column {params.clade_column:q} \
-            --mutations-column {params.mutations_column:q} \
-            --attribute-name {params.haplotype_column_name:q} \
-            --output {output.metadata:q}
-        """
+def _get_clade_column(wildcards):
+    """
+    Map variant_classification to haplotype column names.
+    The returned column names should match the columns available in the metadata,
+    which should defined in the seasonal-flu ingest config.
+    """
+    if wildcards.variant_classification == "emerging_haplotype":
+        return "emerging_haplotype_ha"
+    elif wildcards.variant_classification == "aa_haplotype":
+        return "subclade_haplotype_ha"
+    raise Exception(f"Encountered unsupported variant_classification {wildcards.variant_classification!r}")
 
 rule clade_seq_counts:
     input:
-        metadata="data/{data_provenance}/{lineage}/metadata_with_nextclade_with_aa_haplotypes.tsv",
+        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
     output:
         sequence_counts="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/seq_counts.tsv",
     params:
         id_column="strain",
         date_column="date",
+        clade_column=_get_clade_column,
     shell:
         """
         ./scripts/summarize-clade-sequence-counts \
@@ -150,7 +85,7 @@ rule clade_seq_counts:
             --id-column {params.id_column:q} \
             --date-column {params.date_column:q} \
             --location-column {wildcards.geo_resolution:q} \
-            --clade-column {wildcards.variant_classification:q} \
+            --clade-column {params.clade_column:q} \
             --output {output.sequence_counts}
             """
 
