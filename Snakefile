@@ -155,13 +155,15 @@ rule add_colors_to_mlr_model:
         color_schemes="config/color_schemes.tsv",
     output:
         model="results/{data_provenance}/{variant_classification}/{lineage}/{geo_resolution}/mlr/MLR_results.json",
+    params:
+        coloring_field=_get_clade_column,
     shell:
         r"""
         python scripts/add_colors_to_model.py \
             --model {input.model:q} \
             --auspice-config {input.auspice_config:q} \
             --color-schemes {input.color_schemes:q} \
-            --coloring-field {wildcards.variant_classification:q} \
+            --coloring-field {params.coloring_field:q} \
             --output {output.model:q}
         """
 
