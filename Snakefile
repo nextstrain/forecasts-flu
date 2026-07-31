@@ -43,7 +43,7 @@ rule filter_data:
     input:
         metadata="data/{data_provenance}/{lineage}/metadata.tsv",
     output:
-        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
+        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade_and_without_global.tsv",
     params:
         min_date=lambda wildcards: config["min_date"],
         max_date=lambda wildcards: config["max_date"],
@@ -55,6 +55,16 @@ rule filter_data:
             --min-date {params.min_date:q} \
             --max-date {params.max_date:q} \
             --output-metadata {output.metadata}
+        """
+
+rule add_global_column_to_metadata:
+    input:
+        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade_and_without_global.tsv",
+    output:
+        metadata="data/{data_provenance}/{lineage}/filtered_metadata_with_nextclade.tsv",
+    shell:
+        r"""
+        csvtk mutate2 -t -e '"global"' -n global {input.metadata} > {output.metadata}
         """
 
 def _get_clade_column(wildcards):
