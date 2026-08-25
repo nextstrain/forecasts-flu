@@ -11,8 +11,17 @@ data_provenances:
   - gisaid
 
 variant_classifications:
+  - subclade
   - emerging_haplotype
   - aa_haplotype
+
+# Define mapping of forecast model's variant classification (the name that
+# appears in the web interface and data file paths) and the column in the
+# metadata with the corresponding variant labels.
+variant_column_by_variant_classification:
+  subclade: subclade_nextclade_ha
+  emerging_haplotype: emerging_haplotype_ha
+  aa_haplotype: subclade_haplotype_ha
 
 lineages:
   - h1n1pdm
@@ -28,6 +37,13 @@ max_date: "0D"
 
 prepare_data:
   gisaid:
+    subclade:
+      country:
+        location_min_seq: 100
+        clade_min_seq: 30
+      region:
+        location_min_seq: 100
+        clade_min_seq: 30
     emerging_haplotype:
       country:
         location_min_seq: 100
@@ -42,4 +58,3 @@ prepare_data:
       region:
         location_min_seq: 100
         clade_min_seq: 50
-

@@ -2,7 +2,7 @@ configfile: "config/defaults.yaml"
 
 wildcard_constraints:
     data_provenance=r"(gisaid)",
-    variant_classification=r"(emerging_haplotype|aa_haplotype)",
+    variant_classification=r"(subclade|emerging_haplotype|aa_haplotype)",
     lineage=r"(h1n1pdm|h3n2|vic)",
     date=r"\d{4}-\d{2}-\d{2}"
 
@@ -73,10 +73,9 @@ def _get_clade_column(wildcards):
     The returned column names should match the columns available in the metadata,
     which should defined in the seasonal-flu ingest config.
     """
-    if wildcards.variant_classification == "emerging_haplotype":
-        return "emerging_haplotype_ha"
-    elif wildcards.variant_classification == "aa_haplotype":
-        return "subclade_haplotype_ha"
+    if wildcards.variant_classification in config.get("variant_column_by_variant_classification", {}):
+        return config["variant_column_by_variant_classification"][wildcards.variant_classification]
+
     raise Exception(f"Encountered unsupported variant_classification {wildcards.variant_classification!r}")
 
 rule clade_seq_counts:
