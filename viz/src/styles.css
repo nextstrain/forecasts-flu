@@ -10,7 +10,11 @@ main {
 
 .tabContainer {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    /* title column sizes to content; tabs column takes the rest.
+       minmax(0, 1fr) lets the tabs column shrink below its content
+       width so it can scroll internally rather than widening the page. */
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 30px;
     align-items: center;
     min-height: 42px;
     font-size: 1.2rem;
@@ -29,15 +33,31 @@ main {
 
     .tabs {
         grid-column: 2;
+        min-width: 0;
         display: flex;
-        justify-content: center;
+        /* centre the tabs when they fit; fall back to left-aligned
+           (scrollable) when they overflow, so no tab gets clipped. */
+        justify-content: safe center;
         align-items: center;
         gap: 15px;
         cursor: pointer;
+        overflow-x: auto;
+        /* keep the horizontal scrollbar unobtrusive */
+        scrollbar-width: thin;
+
+        .tab {
+            white-space: nowrap;
+        }
     }
 
     .selected {
         border-bottom: 2px solid #1976d2;
         color: #1976d2;
+    }
+
+    /* a value with no dataset for the current higher-level selection */
+    .invalid {
+        color: #bbb;
+        cursor: not-allowed;
     }
 }

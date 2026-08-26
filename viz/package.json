@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "VITE_LOCAL_DATA=1 vite",
     "build": "vite build",
     "typecheck": "tsc",
     "preview": "vite preview"
