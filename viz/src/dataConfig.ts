@@ -15,10 +15,20 @@ const sites: DatasetConfig['sites'] = {
   relativeGA: {enable: false},
 };
 
-export function createConfig(tabSelected: string, modelDate: string, variantClassification: string): DatasetConfig {
+// export function createConfig(tabSelected: string, modelDate: string, variantClassification: string): DatasetConfig {
+//   const config: DatasetConfig = {
+//     modelName: tabSelected,
+//     modelUrl: _modelUrl(variantClassification, tabSelected, modelDate),
+//     sites: { ...sites },
+//   }
+  
+//   return config;
+// }
+
+export function createConfig(modelName: string, subtype: string, geography: string, classification: string, date: string): DatasetConfig {
   const config: DatasetConfig = {
-    modelName: tabSelected,
-    modelUrl: _modelUrl(variantClassification, tabSelected, modelDate),
+    modelName,
+    modelUrl: _modelUrl(subtype, geography, classification, date),
     sites: { ...sites },
   }
   
@@ -26,18 +36,22 @@ export function createConfig(tabSelected: string, modelDate: string, variantClas
 }
 
 
-function _modelUrl(variantClassification, subtypeResolution, modelDate) {
-  let url = `https://data.nextstrain.org/files/workflows/forecasts-flu/gisaid/${variantClassification}/${subtypeResolution}/mlr/MLR_results.json`;
+function _modelUrl(subtype, geography, classification, date) {
+  const datePrefix = date === 'LATEST' ? '' : `${date}_`
+  let url = `https://data.nextstrain.org/files/workflows/forecasts-flu/gisaid/${classification}/${subtype}/${geography}/mlr/${datePrefix}MLR_results.json`;
 
-  if (modelDate) {
-    // Fall back to the original URL format for model results generated prior to
-    // our support for multiple data provenances and variant classifications.
-    if (Date.parse(modelDate) < Date.parse("2025-12-23")) {
-      url = `https://data.nextstrain.org/files/workflows/forecasts-flu/${subtypeResolution}/mlr/MLR_results.json`;
-    }
+  // if (modelDate) {
+  //   // Fall back to the original URL format for model results generated prior to
+  //   // our support for multiple data provenances and variant classifications.
+  //   // TODO XXX
+  //   if (Date.parse(modelDate) < Date.parse("2025-12-23")) {
+  //     url = `https://data.nextstrain.org/files/workflows/forecasts-flu/${subtypeResolution}/mlr/MLR_results.json`;
+  //   }
 
-    url = url.replace(/([^/]+)$/, `${modelDate}_MLR_results.json`);
-  }
+  //   url = url.replace(/([^/]+)$/, `${modelDate}_MLR_results.json`);
+  // }
+
+  console.log("_modelUrl", url)
 
   return url;
 }
