@@ -7,6 +7,22 @@ on:
         description: "Specific container image to use for build (will override the default of `nextstrain build`)"
         required: false
         type: string
+      triggerPublic:
+        description: "Trigger seasonal-flu public builds after model workflow has completed successfully"
+        required: true
+        type: boolean
+      publicDockerImage:
+        description: "Specific container image to use for seasonal-flu public builds"
+        required: false
+        type: string
+      triggerNextfluPrivate:
+        description: "Trigger seasonal-flu nextflu-private group builds after model workflow has completed successfully"
+        required: true
+        type: boolean
+      nextfluPrivateDockerImage:
+        description: "Specific container image to use for seasonal-flu nextflu-private group builds"
+        required: false
+        type: string
 
 jobs:
   run_models:
@@ -31,3 +47,28 @@ jobs:
       env: |
         NEXTSTRAIN_DOCKER_IMAGE: ${{ inputs.dockerImage }}
         GITHUB_RUN_ID: ${{ github.run_id }}
+
+  trigger:
+    needs: [run_models]
+    strategy:
+      matrix:
+        include:
+          - trigger: ${{ inputs.triggerPublic }}
+            repo: seasonal-flu
+            workflow: run-public-builds.yaml
+            image: ${{ inputs.publicDockerImage }}
+          - trigger: ${{ inputs.triggerNextfluPrivate }}
+            repo: seasonal-flu
+            workflow: run-nextflu-private-builds.yaml
+            image: ${{ inputs.nextfluPrivateDockerImage }}
+    runs-on: ubuntu-latest
+    steps:
+      - if: ${{ matrix.trigger }}
+        name: Trigger ${{ matrix.workflow }}
+        run: |
+          gh workflow run \
+            ${{ matrix.workflow }} \
+            --repo nextstrain/${{ matrix.repo }} \
+            -f dockerImage=${{ matrix.image }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN_NEXTSTRAIN_BOT_WORKFLOW_DISPATCH }}
