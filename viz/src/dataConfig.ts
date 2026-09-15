@@ -1,6 +1,5 @@
 import type { DatasetConfig } from '@nextstrain/evofr-viz';
 
-
 const sites: DatasetConfig['sites'] = {
   freq: {
     estimateSites: ['freq', 'freq_forecast'],
@@ -15,30 +14,14 @@ const sites: DatasetConfig['sites'] = {
   relativeGA: {enable: false},
 };
 
-export function createConfig(tabSelected: string, modelDate: string, variantClassification: string): DatasetConfig {
+export function createConfig(modelName: string, key: string): DatasetConfig {
+  const modelUrl = `https://data.nextstrain.org/${key}`;
   const config: DatasetConfig = {
-    modelName: tabSelected,
-    modelUrl: _modelUrl(variantClassification, tabSelected, modelDate),
+    modelName,
+    modelUrl,
     sites: { ...sites },
   }
-  
+
   return config;
-}
-
-
-function _modelUrl(variantClassification, subtypeResolution, modelDate) {
-  let url = `https://data.nextstrain.org/files/workflows/forecasts-flu/gisaid/${variantClassification}/${subtypeResolution}/mlr/MLR_results.json`;
-
-  if (modelDate) {
-    // Fall back to the original URL format for model results generated prior to
-    // our support for multiple data provenances and variant classifications.
-    if (Date.parse(modelDate) < Date.parse("2025-12-23")) {
-      url = `https://data.nextstrain.org/files/workflows/forecasts-flu/${subtypeResolution}/mlr/MLR_results.json`;
-    }
-
-    url = url.replace(/([^/]+)$/, `${modelDate}_MLR_results.json`);
-  }
-
-  return url;
 }
 

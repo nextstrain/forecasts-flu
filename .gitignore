@@ -14,3 +14,4 @@ environment*
 # viz related
 node_modules/
 dist/
+viz/public/

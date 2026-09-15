@@ -31,3 +31,42 @@ jobs:
       env: |
         NEXTSTRAIN_DOCKER_IMAGE: ${{ inputs.dockerImage }}
         GITHUB_RUN_ID: ${{ github.run_id }}
+
+  collect_jsons_for_viz:
+    needs: [run_models]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required to mint the OIDC token
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure credentials for runtime access to AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::827581582529:role/GitHubActionsRoleNextstrainRepo@forecasts-flu
+          role-duration-seconds: 600 # seconds (10 min)
+
+      - name: Collect model JSON filenames available for the viz app
+        run: |
+          aws s3 ls --recursive \
+            s3://nextstrain-data/files/workflows/forecasts-flu/ > s3_objects.txt
+
+          python3 scripts/parse_s3_model_filenames.py \
+            --s3 s3_objects.txt \
+            --output available-datasets.json
+
+          # Upload gzip-compressed (to a plain .json key)
+          # This matches `nextstrain remote upload`
+          gzip -9 -c available-datasets.json > available-datasets.json.gz
+
+          aws s3 cp \
+            available-datasets.json.gz \
+            s3://nextstrain-data/files/workflows/forecasts-flu/available-datasets.json \
+            --content-encoding gzip \
+            --content-type application/json
+
+          # distribution ID is data.nextstrain.org (see infra repo)
+          aws cloudfront create-invalidation \
+            --distribution-id E3LB0EWZKCCV \
+            --paths /files/workflows/forecasts-flu/available-datasets.json
