@@ -322,7 +322,7 @@ function displayName(displayNames: DisplayNames, level: string, value: string): 
 }
 
 function Footer({ provenance }) {
-  if (provenance==='gisaid') {
+  if (provenance.toLowerCase()==='gisaid') {
     return (
       <p>
         We gratefully acknowledge the authors, originating and submitting laboratories of sequences from the GISAID EpiFlu Database on which this research is based.
