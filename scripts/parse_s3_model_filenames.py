@@ -32,8 +32,9 @@ def key_structure(key):
     of the levels as well as the original key (s3 object pathname).
     Returns False if the key doesn't appear to be a valid structure.
     """
-    if not key.startswith('files/workflows/forecasts-flu/') or \
-            not key.endswith('.json'):
+    if not key.startswith('files/workflows/forecasts-flu/') \
+            or not key.endswith('.json') \
+            or key.endswith('/available-datasets.json'):
         return False
     
     parts = key.removeprefix('files/workflows/forecasts-flu/').split('/')
