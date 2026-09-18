@@ -45,7 +45,7 @@ jobs:
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::827581582529:role/GitHubActionsRoleNextstrainRepo@forecasts-flu
-          role-duration-seconds: 600 # seconds (10 min)
+          role-duration-seconds: 3600 # 1 hour
 
       - name: Collect model JSON filenames available for the viz app
         run: |

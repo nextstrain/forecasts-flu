@@ -8,6 +8,14 @@ import { Dataset, DisplayNames, AvailableDatasetsFile, Selection, Hierarchy, Ava
 
 const USE_LOCAL_DATA = !!import.meta.env.VITE_LOCAL_DATA;
 
+const HIERARCHY_DEFAULTS = {
+  provenance: "gisaid",
+  subtype: "h3n2",
+  geography: "region",
+  classification: "emerging_haplotype",
+  date: "LATEST"
+};
+
 /**
  * Renders the main visualisation panels via the viz library's
  * <PanelDisplay> component, as well as some titles & informative text
@@ -163,7 +171,10 @@ function Main({ datasets, displayNames }: { datasets: Dataset[], displayNames: D
   const validGeographies = new Set(Object.keys(hierarchy?.[provenance]?.[subtype] ?? {}));
   const validClassifications = new Set(Object.keys(hierarchy?.[provenance]?.[subtype]?.[geography] ?? {}));
   const validDates = new Set(Object.keys(hierarchy?.[provenance]?.[subtype]?.[geography]?.[classification] ?? {}));
-
+  const datasetKey = hierarchy[provenance][subtype][geography][classification][date];
+  console.log("\nUI hierarchy selection", selection, )
+  console.log("\ts3 key:", datasetKey)
+  
   return (
     <div className="App">
       <p>{date==='LATEST' ? '' : `Model data from ${date}`}</p>
@@ -181,7 +192,7 @@ function Main({ datasets, displayNames }: { datasets: Dataset[], displayNames: D
           subtype={displayName(displayNames, 'subtype', subtype)}
           geography={displayName(displayNames, 'geography', geography)}
           classification={displayName(displayNames, 'classification', classification)}
-          datasetKey={hierarchy[provenance][subtype][geography][classification][date]}
+          datasetKey={datasetKey}
         />
       </ControlsProvider>
 
@@ -222,8 +233,8 @@ function updateUrl(selection: Selection, replace = false): void {
 
 /**
  * Return the starting selection for each hierarchy level by combining the
- * available datasets (`hierarchy`) with any URL query parameters. By default,
- * we use the first option in each level of the hierarchy.
+ * available datasets (`hierarchy`) with any URL query parameters. For levels
+ * without URL queries we refer to HIERARCHY_DEFAULTS
  *
  * For backwards compatibility, a legacy `tab=<subtype>/<geography>`
  * param is read *only* when none of the new params are present; if any new
@@ -260,26 +271,27 @@ function getStartingSelection(hierarchy: Hierarchy): Selection {
 /**
  * Resolve a (possibly partial or now-invalid) requested selection into a fully
  * valid one, top-down. At each level the requested value is kept if it's a
- * valid child of the levels resolved so far, otherwise it falls back to the
- * first key available at this point in the hierarchy.
+ * valid child of the levels resolved so far, otherwise it falls back to values
+ * in HIERARCHY_DEFAULTS
  */
 function resolveSelection(hierarchy: Hierarchy, requested: Partial<Selection>): Selection {
-  const resolve = (node: Record<string, unknown> | undefined, value: string | undefined): string => {
+  const resolve = (node: Record<string, unknown> | undefined, value: string | undefined, fallback: string): string => {
     const keys = Object.keys(node ?? {});
-    return value !== undefined && keys.includes(value) ? value : keys[0];
+    if (value !== undefined && keys.includes(value)) return value;
+    return keys.includes(fallback) ? fallback : keys[0];
   };
 
-  const provenance = resolve(hierarchy, requested.provenance);
-  const subtype = resolve(hierarchy[provenance], requested.subtype);
-  const geography = resolve(hierarchy[provenance][subtype], requested.geography);
-  const classification = resolve(hierarchy[provenance][subtype][geography], requested.classification);
+  const provenance = resolve(hierarchy, requested.provenance, HIERARCHY_DEFAULTS.provenance);
+  const subtype = resolve(hierarchy[provenance], requested.subtype, HIERARCHY_DEFAULTS.subtype);
+  const geography = resolve(hierarchy[provenance][subtype], requested.geography, HIERARCHY_DEFAULTS.geography);
+  const classification = resolve(hierarchy[provenance][subtype][geography], requested.classification, HIERARCHY_DEFAULTS.classification);
 
   // Date keeps the requested value if valid, else defaults to 'LATEST' where
   // the branch offers it, otherwise the same first-key fallback as above.
   const dates = hierarchy[provenance][subtype][geography][classification];
   const date = requested.date && dates?.[requested.date]
     ? requested.date
-    : (dates?.['LATEST'] ? 'LATEST' : resolve(dates, requested.date));
+    : (dates?.['LATEST'] ? 'LATEST' : resolve(dates, requested.date, HIERARCHY_DEFAULTS.date));
 
   return { provenance, subtype, geography, classification, date };
 }
