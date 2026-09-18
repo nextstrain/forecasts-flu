@@ -171,7 +171,10 @@ function Main({ datasets, displayNames }: { datasets: Dataset[], displayNames: D
   const validGeographies = new Set(Object.keys(hierarchy?.[provenance]?.[subtype] ?? {}));
   const validClassifications = new Set(Object.keys(hierarchy?.[provenance]?.[subtype]?.[geography] ?? {}));
   const validDates = new Set(Object.keys(hierarchy?.[provenance]?.[subtype]?.[geography]?.[classification] ?? {}));
-
+  const datasetKey = hierarchy[provenance][subtype][geography][classification][date];
+  console.log("\nUI hierarchy selection", selection, )
+  console.log("\ts3 key:", datasetKey)
+  
   return (
     <div className="App">
       <p>{date==='LATEST' ? '' : `Model data from ${date}`}</p>
@@ -189,7 +192,7 @@ function Main({ datasets, displayNames }: { datasets: Dataset[], displayNames: D
           subtype={displayName(displayNames, 'subtype', subtype)}
           geography={displayName(displayNames, 'geography', geography)}
           classification={displayName(displayNames, 'classification', classification)}
-          datasetKey={hierarchy[provenance][subtype][geography][classification][date]}
+          datasetKey={datasetKey}
         />
       </ControlsProvider>
 
